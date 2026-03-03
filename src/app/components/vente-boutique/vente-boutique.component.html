@@ -1,0 +1,127 @@
+<div class="vente-boutique-container">
+  <h1>Vente en boutique</h1>
+
+  <div class="row">
+    <!-- Colonne gauche : liste des produits -->
+    <div class="col-produits">
+      <h2>Produits disponibles</h2>
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Rechercher un produit..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+      </div>
+
+      <div *ngIf="loading" class="loading">Chargement...</div>
+      <div *ngIf="error" class="error">{{ error }}</div>
+
+      <div class="produits-liste">
+        <div *ngFor="let p of produitsFiltres" class="produit-item" (click)="selectionnerProduit(p)">
+          <div class="produit-image" *ngIf="p.images?.length">
+            <img [src]="getImageUrl(p.images[0])" [alt]="p.nom">
+          </div>
+          <div class="produit-info">
+            <strong>{{ p.nom }}</strong> - {{ p.prix | number }} AR
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne milieu : détails du produit sélectionné -->
+    <div class="col-details" *ngIf="produitSelectionne">
+      <h2>Ajouter au panier</h2>
+      <div class="produit-detail">
+        <p><strong>{{ produitSelectionne.nom }}</strong></p>
+        <p>Prix : {{ produitSelectionne.prix | number }} AR</p>
+
+        <!-- Sélection de la taille si nécessaire -->
+        <div *ngIf="hasTaille" class="form-group">
+          <label>Taille :</label>
+          <select [(ngModel)]="tailleSelectionnee">
+            <option *ngFor="let s of stocksParTaille" [value]="s.taille">
+              {{ s.taille }} ({{ s.quantite }} dispo)
+            </option>
+          </select>
+        </div>
+
+        <!-- Quantité -->
+        <div class="form-group">
+          <label>Quantité :</label>
+          <input
+            type="number"
+            [(ngModel)]="quantite"
+            min="1"
+            [max]="getStockTotal()"
+          />
+          <small>Stock disponible : {{ getStockTotal() }}</small>
+        </div>
+
+        <button
+          class="btn-ajouter"
+          (click)="ajouterArticle()"
+          [disabled]="!produitSelectionne || (hasTaille && !tailleSelectionnee) || quantite < 1 || quantite > getStockTotal()"
+        >
+          Ajouter au panier
+        </button>
+      </div>
+    </div>
+
+    <!-- Colonne droite : panier de vente -->
+    <div class="col-panier">
+      <h2>Panier de vente</h2>
+      <div *ngIf="articles.length === 0" class="vide">Aucun article</div>
+      <div *ngFor="let art of articles; let i = index" class="article">
+        <div class="article-image" *ngIf="getProduitImage(art) as imgUrl">
+          <img [src]="imgUrl" [alt]="getProduitNom(art)">
+        </div>
+        <div class="article-details">
+          <span>{{ getProduitNom(art) }}</span>
+          <span *ngIf="art.taille">({{ art.taille }})</span>
+          <span> x{{ art.quantite }}</span>
+          <span> = {{ art.prixUnitaire * art.quantite | number }} AR</span>
+        </div>
+        <button class="btn-supprimer" (click)="supprimerArticle(i)">Supprimer</button>
+      </div>
+
+      <div class="total">
+        <strong>Total : {{ total | number }} AR</strong>
+      </div>
+
+      <!-- Frais de livraison (optionnel) -->
+      <div class="form-group">
+        <label>Frais de livraison :</label>
+        <input type="number" [(ngModel)]="fraisLivraison" min="0" />
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Notes :</label>
+        <textarea [(ngModel)]="notes" rows="2"></textarea>
+      </div>
+
+      <!-- Mode de paiement -->
+      <div class="form-group">
+        <label>Mode de paiement :</label>
+        <select [(ngModel)]="methodePaiement">
+          <option value="espèces">Espèces</option>
+          <option value="mobile money">Mobile money</option>
+        </select>
+      </div>
+
+      <div *ngIf="methodePaiement === 'mobile money'" class="form-group">
+        <label>Référence transaction *</label>
+        <input type="text" [(ngModel)]="refTrans" />
+      </div>
+
+      <button
+        class="btn-valider"
+        (click)="validerVente()"
+        [disabled]="articles.length === 0 || (methodePaiement === 'mobile money' && !refTrans)"
+      >
+        Valider la vente
+      </button>
+    </div>
+  </div>
+</div>

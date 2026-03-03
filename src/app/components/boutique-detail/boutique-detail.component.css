@@ -1,0 +1,251 @@
+/* Logo centré */
+.logo-centered {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.boutique-logo-centered {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border: 1px solid #eee;
+  padding: 0.5rem;
+  background-color: white;
+}
+
+/* Conteneur des deux colonnes */
+.boutique-header-container {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+/* Colonne gauche (infos) */
+.boutique-info-col {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+}
+
+.boutique-details .description {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.telephone, .local {
+  color: #666;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.telephone::before {
+  content: "📞";
+  font-size: 1.2rem;
+}
+
+.local::before {
+  content: "📍";
+  font-size: 1.2rem;
+}
+
+/* Colonne droite (horaires) */
+.horaires-col {
+  flex: 1;
+  min-width: 280px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  border: 1px solid #f0f0f0;
+}
+
+.horaires-col h2 {
+  color: orange;
+  font-size: 1.3rem;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  border-bottom: 2px solid orange;
+  padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.horaires-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.horaires-col li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px dashed #eee;
+  color: #444;
+}
+
+.horaires-col li:last-child {
+  border-bottom: none;
+}
+
+.horaires-col .jour {
+  font-weight: 600;
+  color: #333;
+}
+
+.horaires-col .heures {
+  color: orange;
+  font-weight: 500;
+}
+
+.horaires-col .ferme {
+  color: #999;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .boutique-header-container {
+    flex-direction: column;
+  }
+}
+
+.produits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.produit-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.produit-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.produit-image {
+  height: 200px;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.produit-image img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.no-image {
+  color: #999;
+  font-size: 2rem;
+}
+
+.produit-info {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.produit-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.produit-info .description {
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.prix {
+  font-weight: bold;
+  color: orange;
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+}
+
+.stock {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.stock.disponible {
+  color: #28a745;
+}
+
+.stock.rupture {
+  color: #dc3545;
+}
+
+.btn-ajouter {
+  width: 60%;
+  padding: 0.75rem;
+  background-color: orange;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+  margin-top: auto;
+  box-shadow: 0 2px 8px rgba(255,165,0,0.3);
+  align-self: center;
+}
+
+a.btn-ajouter {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-ajouter:hover:not(:disabled) {
+  background-color: #ff8c00;
+  transform: scale(1.02);
+}
+
+.btn-ajouter:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .produits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .produits-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+

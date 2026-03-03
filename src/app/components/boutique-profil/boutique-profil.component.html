@@ -1,0 +1,84 @@
+<div class="profil-container" *ngIf="boutique">
+  <div class="logo-section" *ngIf="getLogoUrl()">
+    <img [src]="getLogoUrl()" [alt]="boutique.nom" class="profile-logo">
+  </div>
+
+  <div *ngIf="!editMode" class="view-mode">
+    <div class="info-horaires-container">
+      <!-- Informations générales -->
+      <div class="info-section">
+        <h2>Informations générales</h2>
+        <p><strong>Nom :</strong> {{ boutique.nom }}</p>
+        <p><strong>Description :</strong> {{ boutique.description }}</p>
+        <p><strong>Téléphone :</strong> {{ boutique.telephone }}</p>
+        <p><strong>Local :</strong> {{ boutique.local.nom_local }} ({{ boutique.local.emplacement }})</p>
+      </div>
+
+      <div class="horaires-section">
+        <h2>Horaires d'ouverture</h2>
+        <ul>
+          <li *ngFor="let horaire of boutique.horaires">
+            <span class="jour">{{ horaire.jour }}</span> :
+            <span *ngIf="horaire.is_open; else ferme">
+              {{ horaire.ouverture }} - {{ horaire.fermeture }}
+            </span>
+            <ng-template #ferme>Fermé</ng-template>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <button class="btn-edit" (click)="toggleEditMode()">Modifier</button>
+  </div>
+
+  <div *ngIf="editMode" class="edit-mode">
+    <form [formGroup]="profilForm" (ngSubmit)="onSubmit()" class="edit-form">
+      <h2>Modifier les informations</h2>
+
+      <div class="form-group">
+        <label for="nom">Nom</label>
+        <input id="nom" formControlName="nom" type="text">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" formControlName="description" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="telephone">Téléphone</label>
+        <input id="telephone" formControlName="telephone" type="text">
+      </div>
+
+      <!-- Champs en lecture seule pour le local -->
+      <div class="form-group">
+        <label>Local</label>
+        <input formControlName="localNom" type="text" [readonly]="true" [disabled]="true">
+      </div>
+      <div class="form-group">
+        <label>Emplacement</label>
+        <input formControlName="localEmplacement" type="text" [readonly]="true" [disabled]="true">
+      </div>
+
+      <h3>Horaires d'ouverture</h3>
+      <div *ngFor="let horaire of horairesArray.controls; let i = index" [formGroupName]="i" class="horaire-group">
+        <div class="horaire-ligne">
+          <span class="jour">{{ horaire.get('jour')?.value }}</span>
+          <label>
+            <input type="checkbox" formControlName="is_open"> Ouvert
+          </label>
+          <input type="time" formControlName="ouverture" [attr.disabled]="horaire.get('is_open')?.value ? null : 'disabled'">
+          <input type="time" formControlName="fermeture" [attr.disabled]="horaire.get('is_open')?.value ? null : 'disabled'">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="profilForm.invalid || loading">Enregistrer</button>
+        <button type="button" (click)="cancelEdit()" [disabled]="loading">Annuler</button>
+      </div>
+
+      <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+    </form>
+  </div>
+</div>

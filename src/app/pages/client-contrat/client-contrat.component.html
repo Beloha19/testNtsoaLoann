@@ -1,0 +1,146 @@
+<div class="mc-overlay" [class.active]="isLoading">
+  <div class="mc-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="mc-toast" [class.show]="isToastVisible">
+  <div class="mc-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<div class="mc-page">
+
+  <!-- HEADER -->
+  <div class="mc-header">
+    <h1 class="mc-title">
+      Mes <em>contrats</em>
+      <span *ngIf="contrats.length">({{ contrats.length }})</span>
+    </h1>
+    <div class="mc-subtitle">
+      Détails de vos locations et accès aux contrats PDF
+    </div>
+  </div>
+
+  <div class="mc-divider"></div>
+
+  <!-- PAS DE CONTRAT -->
+  <div class="mc-empty" *ngIf="!contrats.length && !isLoading">
+    <div class="mc-empty-icon">◈</div>
+    <div class="mc-empty-title">Aucun contrat actif</div>
+    <div class="mc-empty-sub">
+      {{ erreur || 'Aucun contrat actif trouvé pour votre compte.' }}
+    </div>
+  </div>
+
+  <!-- LISTE DES CONTRATS -->
+  <div *ngFor="let contrat of contrats" class="mc-card">
+
+    <!-- Barre statut -->
+    <div class="mc-accepted-bar">
+      <span>Contrat accepté</span>
+      <span class="mc-accepted-date">
+        {{ contrat.dateAcceptation | date:'dd/MM/yyyy' }}
+      </span>
+    </div>
+
+    <div class="mc-body">
+
+      <!-- Local -->
+      <div class="mc-section" *ngIf="contrat.local">
+        <div class="mc-section-title">Local loué</div>
+        <div class="mc-val">{{ contrat.local.nom }}</div>
+        <div class="mc-sub">{{ contrat.local.emplacement }}</div>
+        <div class="mc-sub">
+          {{ contrat.local.surface }} m² · {{ contrat.local.categorie }}
+        </div>
+        <div class="mc-etat-badge loue">
+          {{ contrat.local.etat }}
+        </div>
+      </div>
+
+      <!-- Conditions financières -->
+      <div class="mc-section" *ngIf="contrat.infoLoc">
+        <div class="mc-section-title">Conditions financières</div>
+
+        <div class="mc-prix">
+          {{ formatPrix(contrat.infoLoc.prixMensuel) }}
+          <span class="mc-prix-label">/mois</span>
+        </div>
+
+        <div class="mc-sub">
+          {{ contrat.infoLoc.duree }} mois ·
+          Total {{ formatPrix(contrat.infoLoc.totalContrat) }}
+        </div>
+
+        <div class="mc-sub">
+          Du {{ contrat.infoLoc.dateDebut | date:'dd/MM/yyyy' }}
+          au {{ contrat.infoLoc.dateFin | date:'dd/MM/yyyy' }}
+        </div>
+
+        <!-- SUIVI PAIEMENT AMÉLIORÉ -->
+        <div *ngIf="resumePaiement" class="mc-paiement-section">
+
+          <div class="mc-paiement-stats">
+            <div class="mc-stat">
+              <span class="mc-stat-label">Déjà payé</span>
+              <span class="mc-stat-value mc-stat-value--paid">
+                {{ formatPrix(resumePaiement.totalPaye) }}
+              </span>
+            </div>
+            <div class="mc-stat">
+              <span class="mc-stat-label">Reste à payer</span>
+              <span class="mc-stat-value mc-stat-value--remaining">
+                {{ formatPrix(resumePaiement.totalRestant) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Barre progression -->
+          <div class="mc-progress-bar-container">
+            <div class="mc-progress-bar-track">
+              <div
+                class="mc-progress-bar-fill"
+                [style.width.%]="progressionPaiement">
+              </div>
+            </div>
+            <span class="mc-progress-label">
+              {{ progressionPaiement }}% payé
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Commentaire -->
+      <div class="mc-section" *ngIf="contrat.commentaire">
+        <div class="mc-section-title">Note de l'administration</div>
+        <div class="mc-commentaire">
+          {{ contrat.commentaire }}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="mc-actions">
+      <button class="mc-btn-preview"
+              [disabled]="!contrat.contratDisponible"
+              (click)="apercuContrat(contrat)">
+        Aperçu du contrat
+      </button>
+
+      <button class="mc-btn-contrat"
+              [disabled]="!contrat.contratDisponible"
+              (click)="ouvrirContrat(contrat)">
+        Télécharger le contrat
+      </button>
+
+      <button class="mc-btn-refresh" (click)="loadMonContrat()">
+        Actualiser
+      </button>
+    </div>
+
+  </div>
+
+</div>

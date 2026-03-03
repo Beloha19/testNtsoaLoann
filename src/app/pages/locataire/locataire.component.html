@@ -1,0 +1,157 @@
+<app-navbar-admin></app-navbar-admin>
+<!-- LOADING -->
+<div class="al-overlay" [class.active]="isLoading">
+  <div class="al-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="al-toast" [class.show]="isToastVisible">
+  <div class="al-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<div class="al-page">
+
+  <!-- HEADER -->
+  <div class="al-header">
+    <div class="al-header-left">
+      <div class="al-label">// Administration</div>
+      <h1 class="al-title">Locataires <em>actifs</em></h1>
+      <div class="al-subtitle">Contrats acceptés — vue d'ensemble des locaux loués</div>
+    </div>
+    <div class="al-header-right">
+      <div class="al-counter" *ngIf="locataires.length > 0">
+        <span class="al-counter-num">{{ locataires.length }}</span>
+        <span class="al-counter-lbl">locataire{{ locataires.length > 1 ? 's' : '' }}</span>
+      </div>
+      <button class="al-refresh-btn" (click)="loadLocataires()" [disabled]="isLoading">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- RECHERCHE -->
+  <div class="al-search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input class="al-search"
+           type="text"
+           [(ngModel)]="searchQuery"
+           placeholder="Rechercher par email, local, emplacement…">
+    <span class="al-search-count" *ngIf="searchQuery">
+      {{ locatairesFiltres.length }} résultat{{ locatairesFiltres.length > 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <div class="al-divider"></div>
+
+  <!-- EMPTY -->
+  <div class="al-empty" *ngIf="locataires.length === 0 && !isLoading">
+    <div class="al-empty-icon">◈</div>
+    <div class="al-empty-title">Aucun locataire</div>
+    <div class="al-empty-sub">Aucune demande n'a encore été acceptée</div>
+  </div>
+
+  <!-- LISTE -->
+  <div class="al-list" *ngIf="locatairesFiltres.length > 0">
+    <div class="al-card"
+         *ngFor="let l of locatairesFiltres; let i = index"
+         [style.animation-delay]="i * 0.05 + 's'">
+
+      <div class="al-card-num">#{{ (i + 1) | number:'3.0-0' }}</div>
+
+      <!-- Badge accepté -->
+      <div class="al-accepted-bar">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>Contrat accepté</span>
+        <span class="al-accepted-date">{{ l.dateAcceptation | date:'dd/MM/yyyy' }}</span>
+      </div>
+
+      <!-- Corps -->
+      <div class="al-card-body">
+
+        <!-- Client -->
+        <div class="al-section">
+          <div class="al-section-title">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Client
+          </div>
+          <div class="al-val al-email">{{ l.client.email }}</div>
+          <div class="al-sub" *ngIf="l.client.telephone">{{ l.client.telephone }}</div>
+          <div class="al-type-badge">{{ l.client.typeClient }}</div>
+        </div>
+
+        <!-- Local -->
+        <div class="al-section" *ngIf="l.local">
+          <div class="al-section-title">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Local
+          </div>
+          <div class="al-val">{{ l.local.nom }}</div>
+          <div class="al-sub">{{ l.local.emplacement }}</div>
+          <div class="al-sub">{{ l.local.surface }} m² · {{ l.local.categorie }}</div>
+          <div class="al-etat-badge" [class.loue]="l.local.etat === 'louée'">
+            {{ l.local.etat }}
+          </div>
+        </div>
+
+        <!-- Conditions -->
+        <div class="al-section" *ngIf="l.infoLoc">
+          <div class="al-section-title">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Conditions
+          </div>
+          <div class="al-val al-prix">{{ formatPrix(l.infoLoc.prixMensuel) }}<span class="al-prix-label">/mois</span></div>
+          <div class="al-sub">{{ l.infoLoc.duree }} mois · Total {{ formatPrix(l.infoLoc.totalContrat) }}</div>
+          <div class="al-sub">
+            Du {{ l.infoLoc.dateDebut | date:'dd/MM/yyyy' }}
+            au {{ l.infoLoc.dateFin | date:'dd/MM/yyyy' }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="al-card-actions">
+        <button class="al-btn-contrat"
+                [disabled]="!l.contratDisponible"
+                (click)="ouvrirContrat(l)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          <ng-container *ngIf="l.contratDisponible">Voir le contrat PDF</ng-container>
+          <ng-container *ngIf="!l.contratDisponible">Contrat non disponible</ng-container>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Empty search -->
+  <div class="al-empty" *ngIf="locataires.length > 0 && locatairesFiltres.length === 0">
+    <div class="al-empty-icon">⊘</div>
+    <div class="al-empty-title">Aucun résultat</div>
+    <div class="al-empty-sub">Aucun locataire ne correspond à "{{ searchQuery }}"</div>
+  </div>
+
+</div>
+<app-footer-admin></app-footer-admin>

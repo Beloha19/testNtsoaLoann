@@ -1,0 +1,339 @@
+
+<div class="loading-overlay" [class.active]="isLoading">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" [class.show]="isToastVisible">
+  <div class="toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+
+  <!-- Colonne gauche : texte -->
+  <div class="hero-content">
+    <div class="hero-label">Espaces commerciaux premium</div>
+    <h1>Trouvez l'espace<br>qui <em>élève</em> votre<br>activité</h1>
+    <p class="hero-sub">
+      Une sélection exclusive de locaux commerciaux dans les emplacements les plus
+      stratégiques. Boutiques, pop-up stores, galeries — chaque espace est une opportunité.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">{{ allLocals.length || '—' }}</span>
+        <span class="stat-label">Espaces disponibles</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">4</span>
+        <span class="stat-label">Emplacements</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">98%</span>
+        <span class="stat-label">Taux de satisfaction</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Colonne droite : slider -->
+  <div class="hero-slider">
+    <div class="hero-slides">
+      <div class="hero-slide" [class.active]="heroSlide === 0">
+        <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900&q=80&fit=crop" alt="Centre commercial" />
+      </div>
+      <div class="hero-slide" [class.active]="heroSlide === 1">
+        <img src="https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=900&q=80&fit=crop" alt="Boutique premium" />
+      </div>
+      <div class="hero-slide" [class.active]="heroSlide === 2">
+        <img src="https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=900&q=80&fit=crop" alt="Espace commercial" />
+      </div>
+      <div class="hero-slide" [class.active]="heroSlide === 3">
+        <img src="https://images.unsplash.com/photo-1519566335946-e6f65f0f4fdf?w=900&q=80&fit=crop" alt="Galerie commerciale" />
+      </div>
+    </div>
+
+    <div class="hero-slider-overlay"></div>
+
+    <div class="hero-slider-label">
+      <span class="slider-dot"></span>
+      Visite virtuelle disponible
+    </div>
+
+    <div class="hero-slider-dots">
+      <span class="slider-indicator" [class.active]="heroSlide === 0" (click)="goToSlide(0)"></span>
+      <span class="slider-indicator" [class.active]="heroSlide === 1" (click)="goToSlide(1)"></span>
+      <span class="slider-indicator" [class.active]="heroSlide === 2" (click)="goToSlide(2)"></span>
+      <span class="slider-indicator" [class.active]="heroSlide === 3" (click)="goToSlide(3)"></span>
+    </div>
+
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- FILTERS -->
+<section class="filter-section">
+  <div class="filter-top">
+    <span class="filter-title">// Filtres de recherche</span>
+    <span class="result-count">{{ filteredLocals.length }} espace{{ filteredLocals.length !== 1 ? 's' : '' }}</span>
+  </div>
+
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label>Surface (m²)</label>
+      <div class="range-inputs">
+        <input type="number" [(ngModel)]="filters.surfaceMin" placeholder="Min">
+        <input type="number" [(ngModel)]="filters.surfaceMax" placeholder="Max">
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Prix / mois (Ar)</label>
+      <div class="range-inputs">
+        <input type="number" [(ngModel)]="filters.prixMin" placeholder="Min">
+        <input type="number" [(ngModel)]="filters.prixMax" placeholder="Max">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:end">
+      <button class="btn-filter" (click)="applyFilters()">Filtrer</button>
+      <button class="btn-reset" (click)="resetFilters()">✕</button>
+    </div>
+  </div>
+
+  <div class="filter-tags" *ngIf="filterTags.length > 0">
+    <div class="filter-tag" *ngFor="let tag of filterTags" (click)="tag.clear()">
+      {{ tag.label }} <span class="remove">×</span>
+    </div>
+  </div>
+</section>
+
+<!-- VIEW CONTROLS -->
+<div class="view-controls">
+  <select class="sort-select" [(ngModel)]="sortValue" (ngModelChange)="sortLocals()">
+    <option value="default">Trier par défaut</option>
+    <option value="prix-asc">Prix croissant</option>
+    <option value="prix-desc">Prix décroissant</option>
+    <option value="surface-asc">Surface croissante</option>
+    <option value="surface-desc">Surface décroissante</option>
+    <option value="nom-asc">Nom A→Z</option>
+  </select>
+  <div class="view-btns">
+    <button class="view-btn" [class.active]="currentView === 'grid'" (click)="setView('grid')">⊞</button>
+    <button class="view-btn" [class.active]="currentView === 'list'" (click)="setView('list')">☰</button>
+  </div>
+</div>
+
+<!-- GRID -->
+<main class="locals-grid" [class.list-view]="currentView === 'list'">
+  <div class="empty-state" *ngIf="pagedLocals.length === 0 && !isLoading">
+    <div class="empty-icon">◈</div>
+    <div class="empty-title">Aucun espace trouvé</div>
+    <div class="empty-sub">Modifiez vos critères de recherche</div>
+  </div>
+
+  <div class="local-card"
+       *ngFor="let local of pagedLocals; let i = index; trackBy: trackById"
+       (click)="openModal(local)">
+
+    <div class="card-image">
+
+      <!-- CARD — thumbnail optimisé (400x300, crop auto, format/qualité auto) -->
+      <img
+        *ngIf="local.images && local.images.length > 0"
+        [src]="getThumbnailUrl(local.images[0])"
+        [alt]="local.nom_boutique"
+        class="card-img-real"
+        loading="lazy">
+
+      <!-- Placeholder si pas d'image -->
+      <div
+        class="card-image-placeholder"
+        *ngIf="!local.images || local.images.length === 0"
+        [attr.data-letter]="getInitiale(local.nom_boutique)">
+      </div>
+
+      <!-- Badge nb images -->
+      <div class="card-img-count" *ngIf="local.images && local.images.length > 1">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="1"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        {{ local.images.length }}
+      </div>
+
+      <div class="card-badge premium" *ngIf="isPremium(local)">Premium</div>
+      <div class="card-badge nouveau" *ngIf="isNew(i)" style="left:auto;right:16px">Nouveau</div>
+      <div class="card-number">#{{ (currentPage - 1) * itemsPerPage + i + 1 | number:'3.0-0' }}</div>
+      <div class="card-overlay">
+        <button class="overlay-btn" (click)="$event.stopPropagation(); openModal(local)">Voir les détails →</button>
+      </div>
+
+    </div>
+
+    <div class="card-body">
+      <div class="card-category">{{ local.categorie }}</div>
+      <div class="card-title">{{ local.nom_boutique }}</div>
+      <div class="card-emplacement">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        {{ local.emplacement }}
+      </div>
+      <div class="card-specs">
+        <div class="spec-item">
+          <div class="spec-value">{{ local.surface }}</div>
+          <div class="spec-label">m²</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-value">{{ formatPrice(local.loyer) }}</div>
+          <div class="spec-label">Ar/mois</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-value" style="color:var(--accent);font-size:13px">●</div>
+          <div class="spec-label">Disponible</div>
+        </div>
+      </div>
+
+      <!-- FOOTER CARD -->
+      <div class="card-footer">
+        <div class="card-price">
+          <div class="price-amount">{{ formatPrice(local.loyer) }}</div>
+          <div class="price-unit">Ar / mois</div>
+        </div>
+        <div class="card-actions">
+          <!-- Favori -->
+          <button class="btn-bookmark"
+                  [class.active]="isBookmarked(local._id)"
+                  (click)="toggleBookmark(local, $event)">
+            {{ isBookmarked(local._id) ? '♥' : '♡' }}
+          </button>
+          <!-- Voir détails -->
+          <button class="btn-visit"
+                  (click)="$event.stopPropagation(); openModal(local)">
+            Voir →
+          </button>
+          <!-- Réserver une visite -->
+          <button class="btn-reserve-card"
+                  (click)="$event.stopPropagation(); reserverVisite(local)">
+            Réserver
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- PAGINATION -->
+<div class="pagination-section" *ngIf="filteredLocals.length > 0">
+  <div class="pagination-info">
+    <span class="page-info-label">Page {{ currentPage }} / {{ totalPages }}</span>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="progressPct"></div>
+    </div>
+    <span class="page-info-label">{{ rangeStart }}–{{ rangeEnd }} sur {{ filteredLocals.length }}</span>
+  </div>
+  <div class="pagination-nav">
+    <button class="page-btn arrow" (click)="goToPage(1)" [disabled]="currentPage === 1">«</button>
+    <button class="page-btn arrow" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+    <ng-container *ngFor="let page of paginationRange">
+      <span class="page-ellipsis" *ngIf="!isNumber(page)">…</span>
+      <button class="page-btn" *ngIf="isNumber(page)"
+              [class.active]="page === currentPage"
+              (click)="goToPage(+page)">{{ page }}</button>
+    </ng-container>
+    <button class="page-btn arrow" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+    <button class="page-btn arrow" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">»</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" [class.active]="isModalOpen" (click)="onOverlayClick($event)">
+  <div class="modal" *ngIf="selectedLocal">
+
+    <div class="modal-header">
+      <div>
+        <div class="modal-cat">{{ selectedLocal.categorie }}</div>
+        <div class="modal-title">{{ selectedLocal.nom_boutique }}</div>
+        <div class="modal-location">📍 {{ selectedLocal.emplacement }}</div>
+      </div>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Galerie images -->
+      <div class="modal-gallery" *ngIf="selectedLocal.images && selectedLocal.images.length > 0">
+        <div class="modal-gallery-main">
+
+          <!-- MODALE — image full qualité (pas de transformation) -->
+          <img
+            [src]="getImageUrl(selectedLocal.images[modalImageIndex])"
+            [alt]="selectedLocal.nom_boutique"
+            class="modal-gallery-img">
+
+          <div class="modal-gallery-nav" *ngIf="selectedLocal.images.length > 1">
+            <button class="modal-gallery-arrow" (click)="prevModalImage()" [disabled]="modalImageIndex === 0">‹</button>
+            <span class="modal-gallery-count">{{ modalImageIndex + 1 }} / {{ selectedLocal.images.length }}</span>
+            <button class="modal-gallery-arrow" (click)="nextModalImage()" [disabled]="modalImageIndex === selectedLocal.images.length - 1">›</button>
+          </div>
+        </div>
+
+        <!-- THUMBS modale — thumbnail optimisé -->
+        <div class="modal-gallery-thumbs" *ngIf="selectedLocal.images.length > 1">
+          <div
+            class="modal-gallery-thumb"
+            *ngFor="let img of selectedLocal.images; let ti = index"
+            [class.active]="ti === modalImageIndex"
+            (click)="modalImageIndex = ti">
+            <img [src]="getThumbnailUrl(img)" [alt]="'Image ' + (ti + 1)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Specs -->
+      <div class="modal-specs-grid">
+        <div class="modal-spec">
+          <div class="modal-spec-val">{{ selectedLocal.surface }}</div>
+          <div class="modal-spec-lbl">Surface m²</div>
+        </div>
+        <div class="modal-spec">
+          <div class="modal-spec-val">{{ formatPrice(selectedLocal.loyer) }}</div>
+          <div class="modal-spec-lbl">Loyer Ar/mois</div>
+        </div>
+        <div class="modal-spec">
+          <div class="modal-spec-val" style="color:var(--accent)">Dispo</div>
+          <div class="modal-spec-lbl">Statut</div>
+        </div>
+      </div>
+
+      <p class="modal-desc">
+        {{ selectedLocal.description || 'Espace commercial premium disponible immédiatement.' }}
+      </p>
+
+      <!-- Avantages -->
+      <div class="modal-avantages" *ngIf="selectedLocal.avantage && selectedLocal.avantage.length > 0">
+        <div class="modal-avantages-label">// Avantages</div>
+        <div class="modal-avantages-tags">
+          <span class="modal-avantage-tag" *ngFor="let av of selectedLocal.avantage">{{ av }}</span>
+        </div>
+      </div>
+
+      <!-- FOOTER MODAL -->
+      <div class="modal-footer">
+        <div class="card-price">
+          <div class="price-amount" style="font-size:32px">{{ formatPrice(selectedLocal.loyer) }}</div>
+          <div class="price-unit">Ar / mois</div>
+        </div>
+        <button class="btn-reserve" (click)="reserverVisite(selectedLocal)">
+          Réserver une visite →
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,160 @@
+<header class="ms-navbar" [class.scrolled]="isScrolled">
+
+  <a routerLink="/" class="ms-navbar__logo">MARKET<span>SPACE</span></a>
+
+  <nav>
+    <ul class="ms-navbar__nav">
+      <li><a routerLink="/espaces" routerLinkActive="active">Espaces</a></li>
+      <li><a routerLink="/visites" routerLinkActive="active">Visites</a></li>
+      <li><a routerLink="/services" routerLinkActive="active">Services</a></li>
+      <li><a routerLink="/about" routerLinkActive="active">À propos</a></li>
+    </ul>
+  </nav>
+
+  <div class="ms-navbar__actions">
+    <!-- Recherche -->
+    <button class="ms-navbar__icon-btn" title="Rechercher">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+    </button>
+
+    <!-- 🔔 Cloche notifications -->
+    <div class="ms-notif-wrapper">
+      <button class="ms-navbar__icon-btn ms-notif-btn"
+              title="Notifications"
+              (click)="togglePanel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="ms-notif-badge" *ngIf="(nonLuesCount$ | async) as count">
+          {{ count > 99 ? '99+' : count }}
+        </span>
+      </button>
+
+      <!-- Panel déroulant -->
+      <div class="ms-notif-panel" *ngIf="isPanelOpen">
+        <div class="ms-notif-panel__header">
+          <span>Notifications</span>
+          <button class="ms-notif-panel__tout-lu" (click)="marquerToutesLues()">
+            Tout marquer lu
+          </button>
+        </div>
+
+        <div class="ms-notif-panel__list">
+          <ng-container *ngIf="notifications$ | async as notifs">
+            <div *ngIf="notifs.length === 0" class="ms-notif-panel__empty">
+              Aucune notification
+            </div>
+            <div *ngFor="let n of notifs"
+                 class="ms-notif-item"
+                 [class.unread]="!n.lu"
+                 (click)="ouvrirModal(n)">
+              <span class="ms-notif-item__icon">{{ typeIcon(n.type) }}</span>
+              <div class="ms-notif-item__body">
+                <p class="ms-notif-item__titre">{{ n.titre }}</p>
+                <p class="ms-notif-item__date">{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              <span class="ms-notif-item__dot" *ngIf="!n.lu"></span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favoris -->
+    <button class="ms-navbar__icon-btn" title="Favoris">♡</button>
+
+    <!-- Menu utilisateur déroulant -->
+    <div class="user-menu-wrapper" *ngIf="isAuthenticated">
+      <button class="ms-navbar__icon-btn user-menu-btn" title="Mon compte" (click)="toggleUserMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+
+      <!-- Menu déroulant utilisateur -->
+      <div class="user-dropdown" *ngIf="isUserMenuOpen">
+        <div class="user-dropdown__header">
+          <span class="user-name">{{ getUserName() }}</span>
+          <span class="user-email">{{ getUserEmail() }}</span>
+        </div>
+        <div class="user-dropdown__divider"></div>
+        <a routerLink="/locales" (click)="closeUserMenu()">Nos locales disponibles</a>
+        <a routerLink="/mes-paiements" (click)="closeUserMenu()">Mes paiements</a>
+        <a routerLink="/mon-contrat" (click)="closeUserMenu()">Mon contrat</a>
+        <div class="user-dropdown__divider"></div>
+        <a routerLink="/profil" (click)="closeUserMenu()">Mon profil</a>
+        <a (click)="logout()" class="logout-link">Déconnexion</a>
+      </div>
+    </div>
+
+    <button class="ms-navbar__cta" (click)="onCtaClick()" *ngIf="!isAuthenticated">Mon espace</button>
+
+    <button class="ms-navbar__burger" [class.open]="isMobileMenuOpen"
+            (click)="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Drawer mobile -->
+<div class="ms-navbar__mobile-menu" [class.open]="isMobileMenuOpen">
+  <a routerLink="/espaces" (click)="closeMobileMenu()">Espaces</a>
+  <a routerLink="/visites" (click)="closeMobileMenu()">Visites</a>
+  <a routerLink="/services" (click)="closeMobileMenu()">Services</a>
+  <a routerLink="/about" (click)="closeMobileMenu()">À propos</a>
+
+
+  <!-- Liens utilisateur dans le menu mobile -->
+  <div class="mobile-user-section" *ngIf="isAuthenticated">
+    <div class="mobile-user-header">
+      <span class="mobile-user-name">{{ getUserName() }}</span>
+      <span class="mobile-user-email">{{ getUserEmail() }}</span>
+    </div>
+    <div class="mobile-user-title">MON ESPACE</div>
+    <a routerLink="/locales" (click)="closeMobileMenu()">Nos locales disponibles</a>
+    <a routerLink="/mes-paiements" (click)="closeMobileMenu()">Mes paiements</a>
+    <a routerLink="/mon-contrat" (click)="closeMobileMenu()">Mon contrat</a>
+    <a routerLink="/profil" (click)="closeMobileMenu()">Mon profil</a>
+    <a (click)="logout(); closeMobileMenu()" class="mobile-logout">Déconnexion</a>
+  </div>
+
+  <a routerLink="/compte" (click)="closeMobileMenu()" *ngIf="!isAuthenticated">Mon espace</a>
+</div>
+
+<!-- Modal détail notification -->
+<div class="ms-modal-overlay" *ngIf="isModalOpen" (click)="fermerModal()">
+  <div class="ms-modal" (click)="$event.stopPropagation()" *ngIf="selectedNotif">
+    <div class="ms-modal__header">
+      <span class="ms-modal__icon">{{ typeIcon(selectedNotif.type) }}</span>
+      <h3 class="ms-modal__titre">{{ selectedNotif.titre }}</h3>
+      <button class="ms-modal__close" (click)="fermerModal()">✕</button>
+    </div>
+
+    <p class="ms-modal__message">
+      {{ selectedNotif.message }}
+      <ng-container *ngIf="selectedNotif.lienAction">
+        <br>
+        <a [routerLink]="selectedNotif.lienAction"
+           class="ms-modal__link"
+           (click)="fermerModal()">
+          Voir plus
+        </a>
+      </ng-container>
+    </p>
+
+    <p class="ms-modal__date">{{ selectedNotif.createdAt | date:'dd/MM/yyyy à HH:mm' }}</p>
+
+    <div class="ms-modal__actions">
+      <button class="ms-modal__btn-lu" (click)="toggleLu(selectedNotif, $event)">
+        {{ selectedNotif.lu ? '📭 Marquer non lue' : '✅ Marquer comme lue' }}
+      </button>
+      <button class="ms-modal__btn-close" (click)="fermerModal()">Fermer</button>
+    </div>
+  </div>
+</div>

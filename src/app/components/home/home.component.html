@@ -1,0 +1,64 @@
+<header class="header">
+  <div class="navbar">
+    <div class="logo">
+      <a routerLink="/home/accueil">CentralMarket</a>
+    </div>
+
+    <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <div class="nav-wrapper" [class.open]="mobileMenuOpen" *ngIf="isAcheteur">
+      <ul class="nav-links">
+        <li><a routerLink="/home/boutiques">Boutiques</a></li>
+        <li><a routerLink="/home/panier">Votre Panier</a></li>
+        <li><a routerLink="/home/locales">Locaux disponibles</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-wrapper" [class.open]="mobileMenuOpen" *ngIf="isBoutique">
+      <ul class="nav-links">
+        <li><a routerLink="/home/boutique/profil">Profil</a></li>
+        <li><a routerLink="/home/boutique/produits">Produits</a></li>
+        <li class="dropdown">
+          <a href="#" (click)="toggleVentesDropdown(); $event.preventDefault()">Vente</a>
+          <div class="dropdown-menu" *ngIf="showVentesDropdown">
+            <a routerLink="/home/ventes-attente" (click)="closeVentesDropdown()">Ventes en ligne</a>
+            <a routerLink="/home/ventes-boutique" (click)="closeVentesDropdown()">Ventes en boutique</a>
+          </div>
+        </li>
+        <li><a routerLink="/home/mes-paiements">Suivi loyer</a></li>
+        <li><a routerLink="/home/mon-contrat">Mes contrats</a></li>
+        <li><a routerLink="/home/allreservation">Mes contrats</a></li>
+      </ul>
+    </div>
+
+
+    <div class="nav-wrapper" [class.open]="mobileMenuOpen" *ngIf="!user">
+      <ul class="nav-links">
+        <li><a routerLink="/home/accueil">Accueil</a></li>
+        <li><a routerLink="/home/boutiques">Boutiques</a></li>
+      </ul>
+    </div>
+
+    <div class="user-menu">
+      <div *ngIf="user; else loginBlock" class="user-info" (click)="toggleDropdown()">
+        <i class="bi bi-person-circle user-icon"></i>
+        <span class="user-name">{{ user.nom }}</span>
+        <i class="bi bi-chevron-down"></i>
+        <div class="user-dropdown" *ngIf="showDropdown">
+          <button (click)="logout()">Se déconnecter</button>
+        </div>
+      </div>
+      <ng-template #loginBlock>
+        <a routerLink="/login" class="login-link">
+          <i class="bi bi-box-arrow-in-right"></i> Se connecter
+        </a>
+      </ng-template>
+    </div>
+
+  </div>
+</header>
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>

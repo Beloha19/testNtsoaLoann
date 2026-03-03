@@ -1,0 +1,43 @@
+<div class="ventes-container">
+  <h1>Ventes en attente</h1>
+
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="!loading && ventes.length === 0" class="empty-message">
+    Aucune vente en attente.
+  </div>
+
+  <div *ngFor="let vente of ventes" class="vente-card">
+    <div class="vente-header">
+      <span>Réf: {{ vente.reference }}</span>
+      <span>Date: {{ vente.date | date:'dd/MM/yyyy HH:mm' }}</span>
+      <span>Total: {{ getTotal(vente) | number }} AR</span>
+      <span *ngIf="vente.fraisLivraison > 0">(dont frais {{ vente.fraisLivraison | number }} AR)</span>
+    </div>
+    <div class="vente-client" *ngIf="vente.clientNom">
+      Client: {{ vente.clientNom }} ({{ vente.clientEmail }})
+    </div>
+    <div class="vente-items">
+      <div *ngFor="let item of vente.items" class="item">
+        <div class="item-image" *ngIf="getProduitImage(item) as imgUrl">
+          <img [src]="imgUrl" [alt]="getProduitNom(item)">
+        </div>
+        <div class="item-details">
+          <span class="nom">{{ getProduitNom(item) }}</span>
+          <span class="taille" *ngIf="item.taille">Taille: {{ item.taille }}</span>
+          <span class="quantite">x{{ item.quantite }}</span>
+          <span class="prix">{{ item.prixUnitaire | number }} AR</span>
+        </div>
+      </div>
+    </div>
+    <div class="vente-actions">
+      <button class="btn-confirmer" (click)="confirmer(vente._id)">Confirmer</button>
+      <button class="btn-annuler" (click)="annuler(vente._id)">Annuler</button>
+    </div>
+  </div>
+</div>

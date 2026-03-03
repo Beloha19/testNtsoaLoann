@@ -1,0 +1,114 @@
+<div class="register-container">
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+    <h2>Inscription</h2>
+
+    <div class="form-group">
+      <label for="nom">Nom</label>
+      <input
+        id="nom"
+        formControlName="nom"
+        placeholder="Votre nom"
+        [class.is-invalid]="registerForm.get('nom')?.invalid && registerForm.get('nom')?.touched"
+      />
+      <div *ngIf="registerForm.get('nom')?.invalid && registerForm.get('nom')?.touched" class="error">
+        <span *ngIf="registerForm.get('nom')?.errors?.['required']">Le nom est requis</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="prenom">Prénom</label>
+      <input
+        id="prenom"
+        formControlName="prenom"
+        placeholder="Votre prénom"
+        [class.is-invalid]="registerForm.get('prenom')?.invalid && registerForm.get('prenom')?.touched"
+      />
+      <div *ngIf="registerForm.get('prenom')?.invalid && registerForm.get('prenom')?.touched" class="error">
+        <span *ngIf="registerForm.get('prenom')?.errors?.['required']">Le prénom est requis</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input
+        type="email"
+        id="email"
+        formControlName="email"
+        placeholder="Votre email"
+        [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+      />
+      <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error">
+        <span *ngIf="registerForm.get('email')?.errors?.['required']">L'email est requis</span>
+        <span *ngIf="registerForm.get('email')?.errors?.['email']">Format d'email invalide</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="mdp">Mot de passe</label>
+      <input
+        type="password"
+        id="mdp"
+        formControlName="mdp"
+        placeholder="Votre mot de passe (min. 6 caractères)"
+        [class.is-invalid]="registerForm.get('mdp')?.invalid && registerForm.get('mdp')?.touched"
+      />
+      <div *ngIf="registerForm.get('mdp')?.invalid && registerForm.get('mdp')?.touched" class="error">
+        <span *ngIf="registerForm.get('mdp')?.errors?.['required']">Le mot de passe est requis</span>
+        <span *ngIf="registerForm.get('mdp')?.errors?.['minlength']">6 caractères minimum</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="telephone">Téléphone (optionnel)</label>
+      <input
+        type="tel"
+        id="telephone"
+        formControlName="telephone"
+        placeholder="Votre numéro"
+        [class.is-invalid]="registerForm.get('telephone')?.invalid && registerForm.get('telephone')?.touched"
+      />
+      <div *ngIf="registerForm.get('telephone')?.invalid && registerForm.get('telephone')?.touched" class="error">
+        Format invalide (chiffres uniquement)
+      </div>
+    </div>
+
+    <div class="form-group" *ngIf="typesClient.length > 0">
+      <label>Type de client <span class="required">*</span></label>
+      <div *ngFor="let type of typesClient" class="radio-option">
+        <label>
+          <input
+            type="radio"
+            [value]="type._id"
+            formControlName="typeClient"
+            [class.is-invalid]="registerForm.get('typeClient')?.invalid && registerForm.get('typeClient')?.touched"
+          />
+          {{ type.typeClientex }}
+        </label>
+      </div>
+      <div *ngIf="registerForm.get('typeClient')?.invalid && registerForm.get('typeClient')?.touched" class="error">
+        <span *ngIf="registerForm.get('typeClient')?.errors?.['required']">Veuillez sélectionner un type de client</span>
+      </div>
+    </div>
+
+
+    <div *ngIf="loadingTypes" class="loading-types">Chargement des types...</div>
+
+    <!-- Messages globaux -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="successMessage" class="success-message">
+      {{ successMessage }}
+    </div>
+
+    <!-- Bouton de soumission -->
+    <button type="submit" [disabled]="loading || registerForm.invalid">
+      <span *ngIf="loading">Inscription en cours...</span>
+      <span *ngIf="!loading">S'inscrire</span>
+    </button>
+
+    <p class="login-link">
+      Déjà un compte ? <a routerLink="/login">Se connecter</a>
+    </p>
+  </form>
+</div>

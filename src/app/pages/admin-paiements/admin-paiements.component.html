@@ -1,0 +1,419 @@
+<app-navbar-admin></app-navbar-admin>
+<!-- OVERLAY -->
+<div class="ap-overlay" [class.active]="isLoading">
+  <div class="ap-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="ap-toast" [class.show]="isToastVisible" [class.error]="toastType === 'error'">
+  <div class="ap-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<div class="ap-page">
+
+  <!-- HEADER -->
+  <div class="ap-header">
+    <div>
+      <div class="ap-label">// Administration</div>
+      <h1 class="ap-title">Gestion des <em>loyers</em></h1>
+    </div>
+    <div class="ap-header-badges">
+      <div class="ap-badge-count rouge" *ngIf="impayes.length > 0">
+        <span>{{ impayes.length }}</span> impayé{{ impayes.length > 1 ? 's' : '' }}
+      </div>
+      <div class="ap-badge-count or" *ngIf="preuves.length > 0">
+        <span>{{ preuves.length }}</span> preuve{{ preuves.length > 1 ? 's' : '' }} en attente
+      </div>
+    </div>
+  </div>
+
+  <div class="ap-divider"></div>
+
+  <!-- ONGLETS -->
+  <div class="ap-onglets">
+    <button class="ap-onglet" [class.active]="ongletActif === 'preuves'" (click)="setOnglet('preuves')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Preuves en attente
+      <span class="ap-onglet-badge" *ngIf="preuves.length > 0">{{ preuves.length }}</span>
+    </button>
+    <button class="ap-onglet" [class.active]="ongletActif === 'impayes'" (click)="setOnglet('impayes')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      Impayés
+      <span class="ap-onglet-badge rouge" *ngIf="impayes.length > 0">{{ impayes.length }}</span>
+    </button>
+    <button class="ap-onglet" [class.active]="ongletActif === 'client'" (click)="setOnglet('client')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Loyers d'un client
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- ONGLET : PREUVES EN ATTENTE                          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div *ngIf="ongletActif === 'preuves'">
+
+    <div class="ap-empty" *ngIf="preuves.length === 0 && !isLoading">
+      <div class="ap-empty-icon">✓</div>
+      <div class="ap-empty-title">Aucune preuve en attente</div>
+      <div class="ap-empty-sub">Toutes les preuves ont été traitées</div>
+    </div>
+
+    <div class="ap-list" *ngIf="preuves.length > 0">
+      <div class="ap-card ap-card-preuve" *ngFor="let p of preuves; let i = index" [style.animation-delay]="i * 0.04 + 's'">
+
+        <div class="ap-card-left">
+          <div class="ap-card-tag">// Preuve soumise</div>
+          <div class="ap-card-mois">{{ p.moisLabel }}</div>
+          <div class="ap-card-client">{{ p.client?.email ?? '—' }}</div>
+          <div class="ap-card-local" *ngIf="p.local">{{ p.local.nom_boutique }} · {{ p.local.emplacement }}</div>
+        </div>
+
+        <div class="ap-card-montants">
+          <div class="ap-montant-row">
+            <span class="ap-montant-key">Dû</span>
+            <span class="ap-montant-val">{{ formatPrix(p.montantDu) }}</span>
+          </div>
+          <div class="ap-montant-row">
+            <span class="ap-montant-key">Déclaré</span>
+            <span class="ap-montant-val or">{{ formatPrix(p.montantPaye) }}</span>
+          </div>
+          <div class="ap-montant-row" *ngIf="p.modePaiement">
+            <span class="ap-montant-key">Via</span>
+            <span class="ap-montant-val">{{ p.modePaiement }}</span>
+          </div>
+          <div class="ap-montant-row" *ngIf="p.referenceTransaction">
+            <span class="ap-montant-key">Réf</span>
+            <span class="ap-montant-val mono">{{ p.referenceTransaction }}</span>
+          </div>
+        </div>
+
+        <div class="ap-card-preuve-zone" *ngIf="p.preuveUrl">
+          <button class="ap-btn-preuve-voir" (click)="ouvrirPreuve(p.preuveUrl!)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Voir la preuve
+          </button>
+          <div class="ap-soumis-le" *ngIf="p.soumisLe">Soumis {{ p.soumisLe | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+
+        <div class="ap-card-actions">
+          <button class="ap-btn-valider" (click)="ouvrirDecision(p, 'valider')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Valider
+          </button>
+          <button class="ap-btn-rejeter" (click)="ouvrirDecision(p, 'rejeter')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Rejeter
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- ONGLET : IMPAYÉS                                     -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div *ngIf="ongletActif === 'impayes'">
+
+    <div class="ap-empty" *ngIf="impayes.length === 0 && !isLoading">
+      <div class="ap-empty-icon">◈</div>
+      <div class="ap-empty-title">Aucun impayé</div>
+      <div class="ap-empty-sub">Tous les loyers sont à jour</div>
+    </div>
+
+    <div class="ap-list" *ngIf="impayes.length > 0">
+      <div class="ap-card" *ngFor="let p of impayes; let i = index" [style.animation-delay]="i * 0.04 + 's'"
+           [class.ap-card-rouge]="p.joursRetard > 0">
+
+        <div class="ap-card-left">
+          <div class="ap-statut-dot" [style.background]="getStatutColor(p.statut)"></div>
+          <div class="ap-card-mois">{{ p.moisLabel }}</div>
+          <div class="ap-card-client">{{ p.client?.email ?? '—' }}</div>
+          <div class="ap-card-local" *ngIf="p.local">{{ p.local.nom_boutique }}</div>
+          <div class="ap-retard-badge" *ngIf="p.joursRetard > 0">
+            {{ p.joursRetard }}j de retard
+          </div>
+        </div>
+
+        <div class="ap-card-montants">
+          <div class="ap-montant-row">
+            <span class="ap-montant-key">Dû</span>
+            <span class="ap-montant-val">{{ formatPrix(p.montantDu) }}</span>
+          </div>
+          <div class="ap-montant-row" *ngIf="p.montantPaye > 0">
+            <span class="ap-montant-key">Payé</span>
+            <span class="ap-montant-val vert">{{ formatPrix(p.montantPaye) }}</span>
+          </div>
+          <div class="ap-montant-row">
+            <span class="ap-montant-key">Reste</span>
+            <span class="ap-montant-val rouge">{{ formatPrix(p.resteAPayer) }}</span>
+          </div>
+          <div class="ap-montant-row">
+            <span class="ap-montant-key">Échéance</span>
+            <span class="ap-montant-val mono">{{ p.dateEcheance | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="ap-card-actions">
+          <button class="ap-btn-enregistrer" (click)="ouvrirEnregistrement(p)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Enregistrer paiement
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- ONGLET : LOYERS D'UN CLIENT                          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div *ngIf="ongletActif === 'client'">
+
+    <!-- Barre recherche -->
+    <div class="ap-search-client">
+      <div class="ap-search-label">// ID ou email du client</div>
+      <div class="ap-search-row">
+        <input class="ap-input" type="text" [(ngModel)]="clientIdInput"
+               placeholder="ID MongoDB du client…"
+               (keyup.enter)="loadLoyersClient()">
+        <button class="ap-btn-chercher" (click)="loadLoyersClient()">
+          Rechercher
+        </button>
+      </div>
+    </div>
+
+    <!-- Résumé client -->
+    <div class="ap-client-resume" *ngIf="clientInfo">
+      <div class="ap-client-info">
+        <div class="ap-client-email">{{ clientInfo.email }}</div>
+        <div class="ap-client-tel" *ngIf="clientInfo.telephone">{{ clientInfo.telephone }}</div>
+      </div>
+      <div class="ap-resume-stats" *ngIf="clientResume">
+        <div class="ap-stat">
+          <div class="ap-stat-val">{{ formatPrix(clientResume.totalDu) }}</div>
+          <div class="ap-stat-key">Total dû</div>
+        </div>
+        <div class="ap-stat">
+          <div class="ap-stat-val vert">{{ formatPrix(clientResume.totalPaye) }}</div>
+          <div class="ap-stat-key">Total payé</div>
+        </div>
+        <div class="ap-stat">
+          <div class="ap-stat-val rouge">{{ formatPrix(clientResume.totalRestant) }}</div>
+          <div class="ap-stat-key">Restant</div>
+        </div>
+        <div class="ap-stat" *ngIf="clientResume.nombreEnRetard > 0">
+          <div class="ap-stat-val rouge">{{ clientResume.nombreEnRetard }}</div>
+          <div class="ap-stat-key">En retard</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ap-empty" *ngIf="loyersClient.length === 0 && !isLoading && clientInfo">
+      <div class="ap-empty-icon">◈</div>
+      <div class="ap-empty-title">Aucun loyer</div>
+    </div>
+
+    <div class="ap-list" *ngIf="loyersClient.length > 0">
+      <div class="ap-card ap-card-client-loyer"
+           *ngFor="let l of loyersClient; let i = index"
+           [style.animation-delay]="i * 0.03 + 's'"
+           [class.ap-card-rouge]="l.estEnRetard"
+           [class.ap-card-vert]="l.statut === 'paye'">
+
+        <div class="ap-statut-bande" [style.background]="getStatutColor(l.statut)"></div>
+
+        <div class="ap-card-left">
+          <div class="ap-card-mois">{{ l.moisLabel }}</div>
+          <div class="ap-card-echeance">Échéance : {{ l.dateEcheance | date:'dd/MM/yyyy' }}</div>
+          <div class="ap-retard-badge" *ngIf="l.estEnRetard">{{ l.joursRetard }}j de retard</div>
+        </div>
+
+        <div class="ap-card-montants">
+          <div class="ap-montant-row">
+            <span class="ap-montant-key">Dû</span>
+            <span class="ap-montant-val">{{ formatPrix(l.montantDu) }}</span>
+          </div>
+          <div class="ap-montant-row" *ngIf="l.montantPaye > 0">
+            <span class="ap-montant-key">Payé</span>
+            <span class="ap-montant-val vert">{{ formatPrix(l.montantPaye) }}</span>
+          </div>
+          <div class="ap-montant-row" *ngIf="l.resteAPayer > 0">
+            <span class="ap-montant-key">Reste</span>
+            <span class="ap-montant-val rouge">{{ formatPrix(l.resteAPayer) }}</span>
+          </div>
+        </div>
+
+        <div class="ap-card-statut">
+          <div class="ap-statut-pill"
+               [style.color]="getStatutColor(l.statut)"
+               [style.border-color]="getStatutColor(l.statut) + '55'">
+            {{ l.statut }}
+          </div>
+          <div class="ap-preuve-pill or" *ngIf="l.statutPreuve === 'en_attente_validation'">⏳ preuve en attente</div>
+          <div class="ap-preuve-pill vert" *ngIf="l.statutPreuve === 'validee'">✓ preuve validée</div>
+          <div class="ap-preuve-pill rouge" *ngIf="l.statutPreuve === 'rejetee'">✕ preuve rejetée</div>
+          <div class="ap-note" *ngIf="l.note">{{ l.note }}</div>
+        </div>
+
+        <div class="ap-card-actions" *ngIf="l._id">
+          <!-- Si preuve en attente → bouton valider/rejeter -->
+          <ng-container *ngIf="l.statutPreuve === 'en_attente_validation'">
+            <button class="ap-btn-valider sm" (click)="ouvrirDecision(l, 'valider')">Valider</button>
+            <button class="ap-btn-rejeter sm" (click)="ouvrirDecision(l, 'rejeter')">Rejeter</button>
+          </ng-container>
+          <!-- Si pas encore payé → enregistrement direct -->
+          <button class="ap-btn-enregistrer sm"
+                  *ngIf="l.statut !== 'paye' && l.statutPreuve !== 'en_attente_validation'"
+                  (click)="ouvrirEnregistrement(l)">
+            Enregistrer paiement
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL — DÉCISION PREUVE (valider / rejeter)               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="ap-modal-overlay" [class.active]="isDecisionModalOpen" (click)="fermerDecision()">
+  <div class="ap-modal" (click)="$event.stopPropagation()" *ngIf="paiementSelectionne">
+
+    <div class="ap-modal-header">
+      <div>
+        <div class="ap-modal-tag" [class.vert]="decisionType === 'valider'" [class.rouge]="decisionType === 'rejeter'">
+          <ng-container *ngIf="decisionType === 'valider'">// Valider la preuve</ng-container>
+          <ng-container *ngIf="decisionType === 'rejeter'">// Rejeter la preuve</ng-container>
+        </div>
+        <div class="ap-modal-title">{{ paiementSelectionne.moisLabel }}</div>
+        <div class="ap-modal-sub">{{ paiementSelectionne.client?.email }}</div>
+      </div>
+      <button class="ap-modal-close" (click)="fermerDecision()">✕</button>
+    </div>
+
+    <div class="ap-modal-body">
+
+      <!-- Si valider → montant -->
+      <div class="ap-field-group" *ngIf="decisionType === 'valider'">
+        <div class="ap-field-label">Montant validé (Ar)</div>
+        <input class="ap-input" type="number" [(ngModel)]="montantValide"
+               [placeholder]="paiementSelectionne.montantDu.toString()">
+        <div class="ap-field-hint">Par défaut : {{ formatPrix(paiementSelectionne.montantDu) }}</div>
+      </div>
+
+      <!-- Note -->
+      <div class="ap-field-group">
+        <div class="ap-field-label">
+          <ng-container *ngIf="decisionType === 'valider'">Note interne (optionnel)</ng-container>
+          <ng-container *ngIf="decisionType === 'rejeter'">Raison du rejet <span class="ap-required">*</span></ng-container>
+        </div>
+        <textarea class="ap-textarea" [(ngModel)]="noteDecision"
+                  [placeholder]="decisionType === 'rejeter' ? 'Ex: Preuve illisible, montant incorrect…' : 'Note optionnelle…'"
+                  rows="3"></textarea>
+      </div>
+
+    </div>
+
+    <div class="ap-modal-footer">
+      <button class="ap-btn-cancel" (click)="fermerDecision()">Annuler</button>
+      <button class="ap-btn-valider-modal"
+              *ngIf="decisionType === 'valider'"
+              [disabled]="isSubmitting"
+              (click)="confirmerDecision()">
+        <ng-container *ngIf="!isSubmitting">✓ Confirmer la validation</ng-container>
+        <ng-container *ngIf="isSubmitting">En cours…</ng-container>
+      </button>
+      <button class="ap-btn-rejeter-modal"
+              *ngIf="decisionType === 'rejeter'"
+              [disabled]="isSubmitting"
+              (click)="confirmerDecision()">
+        <ng-container *ngIf="!isSubmitting">✕ Confirmer le rejet</ng-container>
+        <ng-container *ngIf="isSubmitting">En cours…</ng-container>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL — ENREGISTREMENT DIRECT                             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="ap-modal-overlay" [class.active]="isEnregistrementModalOpen" (click)="fermerEnregistrement()">
+  <div class="ap-modal" (click)="$event.stopPropagation()" *ngIf="paiementEnregistrement">
+
+    <div class="ap-modal-header">
+      <div>
+        <div class="ap-modal-tag">// Enregistrement paiement</div>
+        <div class="ap-modal-title">{{ paiementEnregistrement.moisLabel }}</div>
+        <div class="ap-modal-sub">{{ paiementEnregistrement.client?.email }}</div>
+      </div>
+      <button class="ap-modal-close" (click)="fermerEnregistrement()">✕</button>
+    </div>
+
+    <div class="ap-modal-body">
+
+      <div class="ap-field-group">
+        <div class="ap-field-label">Montant reçu (Ar) <span class="ap-required">*</span></div>
+        <input class="ap-input" type="number" [(ngModel)]="montantEnregistre">
+        <div class="ap-field-hint">Reste à payer : {{ formatPrix(paiementEnregistrement.resteAPayer || paiementEnregistrement.montantDu) }}</div>
+      </div>
+
+      <div class="ap-field-group">
+        <div class="ap-field-label">Mode de paiement</div>
+        <div class="ap-mode-row">
+          <button class="ap-mode-btn" [class.active]="modeEnregistrement === 'especes'" (click)="modeEnregistrement = 'especes'">💵 Espèces</button>
+          <button class="ap-mode-btn" [class.active]="modeEnregistrement === 'mvola'" (click)="modeEnregistrement = 'mvola'">📱 MVola</button>
+          <button class="ap-mode-btn" [class.active]="modeEnregistrement === 'orange_money'" (click)="modeEnregistrement = 'orange_money'">🟠 Orange Money</button>
+        </div>
+      </div>
+
+      <div class="ap-field-group" *ngIf="modeEnregistrement !== 'especes'">
+        <div class="ap-field-label">Référence transaction</div>
+        <input class="ap-input" type="text" [(ngModel)]="refEnregistrement" placeholder="Ex: MVola#12345">
+      </div>
+
+      <div class="ap-field-group">
+        <div class="ap-field-label">Note (optionnel)</div>
+        <input class="ap-input" type="text" [(ngModel)]="noteEnregistrement" placeholder="Remarque…">
+      </div>
+
+    </div>
+
+    <div class="ap-modal-footer">
+      <button class="ap-btn-cancel" (click)="fermerEnregistrement()">Annuler</button>
+      <button class="ap-btn-valider-modal"
+              [disabled]="!montantEnregistre || isSubmitting"
+              (click)="confirmerEnregistrement()">
+        <ng-container *ngIf="!isSubmitting">✓ Enregistrer le paiement</ng-container>
+        <ng-container *ngIf="isSubmitting">En cours…</ng-container>
+      </button>
+    </div>
+
+  </div>
+</div>
+<app-footer-admin></app-footer-admin>

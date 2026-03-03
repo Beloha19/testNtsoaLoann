@@ -1,0 +1,181 @@
+.vente-boutique-container {
+  padding: 2rem;
+  background-color: white;
+  color: black;
+  min-height: 100vh;
+}
+
+h1 {
+  color: orange;
+  margin-bottom: 2rem;
+}
+
+.row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.col-produits, .col-details, .col-panier {
+  flex: 1;
+  min-width: 300px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.col-produits {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.produits-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.produit-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.produit-item:hover {
+  background-color: #f0f0f0;
+}
+
+.produit-image {
+  width: 50px;
+  height: 50px;
+  background-color: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.produit-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.produit-info {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-ajouter,
+.btn-valider {
+  background-color: orange;
+  color: black;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+.btn-ajouter:hover:not(:disabled),
+.btn-valider:hover:not(:disabled) {
+  background-color: #ff8c00;
+}
+
+.btn-ajouter:disabled,
+.btn-valider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.article {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.article-image {
+  width: 40px;
+  height: 40px;
+  background-color: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.article-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.article-details {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.btn-supprimer {
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.total {
+  margin: 1rem 0;
+  font-size: 1.2rem;
+  text-align: right;
+}
+
+.vide {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.loading,
+.error {
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+}

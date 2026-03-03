@@ -1,0 +1,60 @@
+<div class="detail-container">
+  <a routerLink=".." class="back-link">← Retour à la boutique</a>
+
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Chargement du produit...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="produit && !loading && !error" class="produit-detail">
+    <div class="produit-images"
+         (mouseenter)="startSlideshow()"
+         (mouseleave)="stopSlideshow()">
+      <img [src]="getImageUrl(produit.images[currentImageIndex])" [alt]="produit.nom">
+    </div>
+    <div class="produit-info">
+      <h1>{{ produit.nom }}</h1>
+      <p class="reference">Réf: {{ produit.reference }}</p>
+      <p class="description">{{ produit.description }}</p>
+      <p class="prix">AR {{ produit.prix | number:'1.0-2' }}</p>
+
+      <!-- Sélection de la taille uniquement si le produit a des tailles distinctes -->
+      <div class="form-group" *ngIf="hasTaille && stocksParTaille.length > 0">
+        <label for="taille">Choisir une taille :</label>
+        <select id="taille" [(ngModel)]="tailleSelectionnee">
+          <option *ngFor="let s of stocksParTaille" [value]="s.taille">
+            {{ s.taille }} ({{ s.quantite }} dispo)
+          </option>
+        </select>
+      </div>
+
+      <!-- Message si aucun stock -->
+      <div *ngIf="stocksParTaille.length === 0" class="no-stock">
+        Aucun stock disponible
+      </div>
+
+      <!-- Quantité (affichée s'il y a du stock) -->
+      <div class="form-group" *ngIf="stocksParTaille.length > 0">
+        <label for="quantite">Quantité :</label>
+        <input
+          type="number"
+          id="quantite"
+          [(ngModel)]="quantite"
+          min="1"
+          [max]="getStockTotal()"
+        />
+        <small>Stock disponible : {{ getStockTotal() }}</small>
+      </div>
+
+      <button
+        class="btn-ajouter"
+        [disabled]="getStockTotal() === 0 || quantite < 1 || quantite > getStockTotal()"
+        (click)="ajouterAuPanier()"
+      >
+        Ajouter au panier
+      </button>
+    </div>
+  </div>
+</div>

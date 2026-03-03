@@ -1,0 +1,388 @@
+<!-- LOADING -->
+<div class="mc-overlay" [class.active]="isLoading">
+  <div class="mc-spinner-wrap">
+    <div class="mc-sr mc-sr-1"></div>
+    <div class="mc-sr mc-sr-2"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="mc-toast" [class.show]="isToastVisible" [class.is-error]="toastType==='error'">
+  <span class="mc-toast-ico">{{ toastType === 'error' ? '✕' : '✓' }}</span>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<div class="mc-page">
+
+  <!-- HEADER -->
+  <div class="mc-header">
+    <div>
+      <div class="mc-eyebrow">
+        <span class="mc-eyebrow-line"></span>Mon espace client
+      </div>
+      <h1 class="mc-title">Mes <em>commandes</em></h1>
+      <p class="mc-subtitle">Suivez vos commandes et soumettez vos preuves de paiement</p>
+    </div>
+    <div class="mc-header-stats">
+      <div class="mc-stat" *ngFor="let s of [
+        {k:'tous',l:'Total'},
+        {k:'en attente paiement',l:'En attente'},
+        {k:'payee',l:'Payées'}
+      ]">
+        <span class="mc-stat-n">{{ countByStatut(s.k) }}</span>
+        <span class="mc-stat-l">{{ s.l }}</span>
+      </div>
+      <button class="mc-refresh" (click)="loadCommandes()" [disabled]="isLoading">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="mc-rule"></div>
+
+  <!-- FILTRES -->
+  <div class="mc-filters">
+    <button class="mc-fpill"
+            *ngFor="let f of [
+              {k:'tous',l:'Toutes'},
+              {k:'en attente paiement',l:'En attente'},
+              {k:'payee',l:'Payées'},
+              {k:'annulee',l:'Annulées'}
+            ]"
+            [class.active]="filtreStatut === f.k"
+            (click)="filtreStatut = f.k">
+      {{ f.l }}
+      <span class="mc-fpill-cnt">{{ countByStatut(f.k) }}</span>
+    </button>
+  </div>
+
+  <!-- EMPTY -->
+  <div class="mc-empty" *ngIf="commandesFiltrees.length === 0 && !isLoading">
+    <div class="mc-empty-ico">◈</div>
+    <p class="mc-empty-title">Aucune commande</p>
+    <p class="mc-empty-sub">Vos commandes apparaîtront ici après votre premier achat</p>
+  </div>
+
+  <!-- LISTE -->
+  <div class="mc-list" *ngIf="commandesFiltrees.length > 0">
+
+    <div class="mc-card"
+         *ngFor="let c of commandesFiltrees; let i = index"
+         [style.animation-delay]="i * 0.055 + 's'"
+         (click)="ouvrirDetail(c)">
+
+      <!-- Bande statut gauche -->
+      <div class="mc-card-stripe" [style.background]="getStatutConfig(c.statut).color"></div>
+
+      <!-- Contenu -->
+      <div class="mc-card-content">
+
+        <div class="mc-card-top">
+          <div class="mc-card-numero">
+            <span class="mc-num">{{ c.numero }}</span>
+            <span class="mc-date">{{ formatDate(c.date) }}</span>
+          </div>
+          <div class="mc-card-statut"
+               [style.color]="getStatutConfig(c.statut).color"
+               [style.background]="getStatutConfig(c.statut).bg"
+               [style.border-color]="getStatutConfig(c.statut).border">
+            <span class="mc-statut-dot" [style.background]="getStatutConfig(c.statut).color"></span>
+            {{ getStatutConfig(c.statut).label }}
+          </div>
+        </div>
+
+        <div class="mc-card-mid">
+          <div class="mc-card-info">
+            <span class="mc-info-lbl">Articles</span>
+            <span class="mc-info-val">{{ c.nombreArticles }}</span>
+          </div>
+          <div class="mc-card-info">
+            <span class="mc-info-lbl">Montant</span>
+            <span class="mc-info-val mc-montant">{{ formatPrix(c.montantTotal) }}</span>
+          </div>
+          <div class="mc-card-info" *ngIf="c.paiement">
+            <span class="mc-info-lbl">Paiement</span>
+            <span class="mc-info-val mc-pmt-label"
+                  [style.color]="getPaiementLabel(c.paiement.statut).color">
+              {{ getPaiementLabel(c.paiement.statut).label }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mc-card-bottom" (click)="$event.stopPropagation()">
+          <!-- Preuve en attente badge -->
+          <div class="mc-preuve-badge" *ngIf="c.paiement?.statutPreuve === 'en_attente_validation'">
+            <span class="mc-pbadge-dot"></span>
+            Preuve soumise — en attente
+          </div>
+          <!-- Preuve rejetée -->
+          <div class="mc-preuve-rejected" *ngIf="c.paiement?.statutPreuve === 'rejetee'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Preuve rejetée
+          </div>
+          <!-- Bouton soumettre -->
+          <button class="mc-btn-preuve"
+                  *ngIf="peutSoumettrePreuve(c)"
+                  (click)="ouvrirPreuve(c)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Soumettre une preuve
+          </button>
+          <span class="mc-voir-detail">
+            Voir le détail
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ═══ MODAL DÉTAIL ═══ -->
+<div class="mc-overlay-modal" [class.active]="isDetailOpen" (click)="fermerDetail()">
+  <div class="mc-modal mc-modal-lg" (click)="$event.stopPropagation()">
+
+    <button class="mc-modal-x" (click)="fermerDetail()">✕</button>
+
+    <!-- Loading -->
+    <div class="mc-modal-spin" *ngIf="isDetailLoading">
+      <div class="mc-sr mc-sr-1"></div><div class="mc-sr mc-sr-2"></div>
+    </div>
+
+    <ng-container *ngIf="detail && !isDetailLoading">
+
+      <!-- Bande statut -->
+      <div class="mc-detail-band"
+           [style.background]="getStatutConfig(detail.commande.statut).bg"
+           [style.border-bottom-color]="getStatutConfig(detail.commande.statut).border">
+        <span class="mc-band-icon" [style.color]="getStatutConfig(detail.commande.statut).color">
+          {{ getStatutConfig(detail.commande.statut).icon }}
+        </span>
+        <span class="mc-band-label" [style.color]="getStatutConfig(detail.commande.statut).color">
+          {{ getStatutConfig(detail.commande.statut).label }}
+        </span>
+        <span class="mc-band-num">{{ detail.commande.numero }}</span>
+      </div>
+
+      <div class="mc-modal-header">
+        <div>
+          <div class="mc-modal-eyebrow">
+            <span class="mc-eyebrow-line"></span>Détail de la commande
+          </div>
+          <div class="mc-modal-amount">{{ formatPrix(detail.commande.montantTotal) }}</div>
+          <div class="mc-modal-sub">Passée le {{ formatDateHeure(detail.commande.createdAt) }}</div>
+        </div>
+      </div>
+
+      <div class="mc-modal-body">
+
+        <!-- Articles -->
+        <div class="mc-section">
+          <div class="mc-section-title">Articles commandés</div>
+          <table class="mc-table">
+            <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Qté</th>
+              <th>Prix unit.</th>
+              <th>Sous-total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let l of detail.commande.lignes">
+              <td class="mc-td-nom">{{ l.nomProduit }}</td>
+              <td class="mc-td-center">×{{ l.quantite }}</td>
+              <td class="mc-td-mono">{{ formatPrix(l.prixUnitaire) }}</td>
+              <td class="mc-td-total">{{ formatPrix(l.sousTotal) }}</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+              <td colspan="3" class="mc-tfoot-label">Total</td>
+              <td class="mc-tfoot-val">{{ formatPrix(detail.commande.montantTotal) }}</td>
+            </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Note -->
+        <div class="mc-section" *ngIf="detail.commande.note">
+          <div class="mc-section-title">Note</div>
+          <div class="mc-note-box">{{ detail.commande.note }}</div>
+        </div>
+
+        <!-- Paiement -->
+        <div class="mc-section" *ngIf="detail.paiement">
+          <div class="mc-section-title">Paiement</div>
+          <div class="mc-pmt-grid">
+            <div class="mc-pmt-item">
+              <span class="mc-pmt-lbl">Statut</span>
+              <span class="mc-pmt-val" [style.color]="getPaiementLabel(detail.paiement.statut).color">
+                {{ getPaiementLabel(detail.paiement.statut).label }}
+              </span>
+            </div>
+            <div class="mc-pmt-item">
+              <span class="mc-pmt-lbl">Montant dû</span>
+              <span class="mc-pmt-val">{{ formatPrix(detail.paiement.montantDu) }}</span>
+            </div>
+            <div class="mc-pmt-item" *ngIf="detail.paiement.modePaiement">
+              <span class="mc-pmt-lbl">Mode</span>
+              <span class="mc-pmt-val mc-pmt-mode">{{ detail.paiement.modePaiement }}</span>
+            </div>
+            <div class="mc-pmt-item" *ngIf="detail.paiement.referenceTransaction">
+              <span class="mc-pmt-lbl">Référence</span>
+              <span class="mc-pmt-val mc-pmt-ref">{{ detail.paiement.referenceTransaction }}</span>
+            </div>
+            <div class="mc-pmt-item" *ngIf="detail.paiement.datePaiement">
+              <span class="mc-pmt-lbl">Payé le</span>
+              <span class="mc-pmt-val">{{ formatDateHeure(detail.paiement.datePaiement!) }}</span>
+            </div>
+            <div class="mc-pmt-item mc-pmt-full" *ngIf="detail.paiement.note">
+              <span class="mc-pmt-lbl">Note admin</span>
+              <span class="mc-pmt-val mc-pmt-note">{{ detail.paiement.note }}</span>
+            </div>
+          </div>
+
+          <!-- Statut preuve -->
+          <div class="mc-preuve-status"
+               *ngIf="detail.paiement.statutPreuve"
+               [class.validated]="detail.paiement.statutPreuve === 'validee'"
+               [class.pending]="detail.paiement.statutPreuve === 'en_attente_validation'"
+               [class.rejected]="detail.paiement.statutPreuve === 'rejetee'">
+            <span class="mc-ps-dot"></span>
+            <span *ngIf="detail.paiement.statutPreuve === 'validee'">Preuve de paiement validée</span>
+            <span *ngIf="detail.paiement.statutPreuve === 'en_attente_validation'">Preuve en attente de validation par l'administrateur</span>
+            <span *ngIf="detail.paiement.statutPreuve === 'rejetee'">Preuve rejetée — soumettez-en une nouvelle</span>
+            <span *ngIf="detail.paiement.statutPreuve === 'non_requise'">Paiement enregistré directement</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mc-modal-footer">
+        <button class="mc-btn-cancel" (click)="fermerDetail()">Fermer</button>
+        <button class="mc-btn-preuve-modal"
+                *ngIf="detailAsResume() && peutSoumettrePreuve(detailAsResume()!)"
+                (click)="ouvrirPreuve(detailAsResume()!, true)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Soumettre une preuve
+        </button>
+      </div>
+
+    </ng-container>
+  </div>
+</div>
+
+<!-- ═══ MODAL PREUVE ═══ -->
+<div class="mc-overlay-modal" [class.active]="isPreuveOpen" (click)="fermerPreuve()">
+  <div class="mc-modal" (click)="$event.stopPropagation()" *ngIf="commandePreuve">
+
+    <button class="mc-modal-x" (click)="fermerPreuve()">✕</button>
+
+    <div class="mc-modal-header">
+      <div class="mc-modal-eyebrow">
+        <span class="mc-eyebrow-line"></span>Soumettre un paiement
+      </div>
+      <div class="mc-modal-title">Preuve de paiement</div>
+      <div class="mc-modal-sub">
+        {{ commandePreuve.numero }} · <strong>{{ formatPrix(commandePreuve.montantTotal) }}</strong>
+      </div>
+    </div>
+
+    <div class="mc-modal-body">
+
+      <!-- Mode -->
+      <div class="mc-fg">
+        <label class="mc-fl">Mode de paiement</label>
+        <div class="mc-mode-toggle">
+          <button class="mc-mode-opt" [class.active]="preuveModePaiement === 'mobile_money'"
+                  (click)="preuveModePaiement = 'mobile_money'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            Mobile Money
+          </button>
+          <button class="mc-mode-opt" [class.active]="preuveModePaiement === 'cheque'"
+                  (click)="preuveModePaiement = 'cheque'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            Chèque
+          </button>
+        </div>
+      </div>
+
+      <!-- Référence -->
+      <div class="mc-fg">
+        <label class="mc-fl">
+          Référence de transaction
+          <span class="mc-fl-opt">(optionnel)</span>
+        </label>
+        <input class="mc-fi" type="text" [(ngModel)]="preuveReference"
+               placeholder="N° transaction, réf chèque…">
+      </div>
+
+      <!-- Upload -->
+      <div class="mc-fg">
+        <label class="mc-fl">Fichier justificatif <span class="mc-fl-req">*</span></label>
+        <label class="mc-upload" [class.has-file]="preuveFile" (click)="fileInput.click()">
+          <input #fileInput type="file" accept=".jpg,.jpeg,.png,.pdf" (change)="onFileSelected($event)" hidden>
+          <div class="mc-upload-empty" *ngIf="!preuveFile">
+            <div class="mc-upload-ico">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <span class="mc-upload-txt">Cliquez pour sélectionner</span>
+            <span class="mc-upload-hint">JPG, PNG ou PDF · max 5 Mo</span>
+          </div>
+          <div class="mc-upload-file" *ngIf="preuveFile">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>{{ preuveFile.name }}</span>
+            <span class="mc-file-sz">{{ (preuveFile.size / 1024).toFixed(0) }} Ko</span>
+          </div>
+        </label>
+      </div>
+
+    </div>
+
+    <div class="mc-modal-footer">
+      <button class="mc-btn-cancel" (click)="fermerPreuve()">Annuler</button>
+      <button class="mc-btn-submit" (click)="soumettrePreuve()"
+              [disabled]="!preuveFile || isPreuveSubmitting">
+        <span *ngIf="!isPreuveSubmitting">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Soumettre
+        </span>
+        <span *ngIf="isPreuveSubmitting">Envoi…</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+<app-footer-admin></app-footer-admin>

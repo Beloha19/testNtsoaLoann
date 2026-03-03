@@ -1,0 +1,553 @@
+<app-navbar-admin></app-navbar-admin>
+<!-- LOADING OVERLAY -->
+<div class="av-overlay" [class.active]="isLoading">
+  <div class="av-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="av-toast" [class.show]="isToastVisible">
+  <div class="av-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<!-- PAGE -->
+<div class="av-page">
+
+  <!-- ── HEADER ── -->
+  <div class="av-header">
+    <div class="av-header-left">
+      <div class="av-label">// Administration</div>
+      <h1 class="av-title">Gestion des <em>visites</em></h1>
+      <div class="av-subtitle">Confirmez, refusez ou reportez les demandes de visite</div>
+    </div>
+    <div class="av-header-right">
+      <div class="av-counter" *ngIf="countEnAttente > 0">
+        <span class="av-counter-num">{{ countEnAttente }}</span>
+        <span class="av-counter-lbl">en attente</span>
+      </div>
+
+      <div class="av-toggle-wrap">
+        <span class="av-toggle-label">En attente seulement</span>
+        <button class="av-toggle" [class.on]="showEnAttenteOnly" (click)="toggleFilter()" type="button">
+          <span class="av-toggle-track"><span class="av-toggle-thumb"></span></span>
+          <span class="av-toggle-state">{{ showEnAttenteOnly ? 'ON' : 'OFF' }}</span>
+        </button>
+      </div>
+
+      <div class="av-toggle-wrap">
+        <span class="av-toggle-label">Aujourd'hui seulement</span>
+        <button class="av-toggle" [class.on]="showTodayOnly" (click)="toggleTodayFilter()" type="button">
+          <span class="av-toggle-track"><span class="av-toggle-thumb"></span></span>
+          <span class="av-toggle-state">{{ showTodayOnly ? 'ON' : 'OFF' }}</span>
+        </button>
+      </div>
+
+      <button class="av-refresh-btn" (click)="loadVisites()" [disabled]="isLoading">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- ── FILTRE LOCAUX ── -->
+  <div class="av-local-filter" *ngIf="locaux.length > 0">
+    <div class="av-local-filter-label">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Filtrer par local
+    </div>
+    <div class="av-local-pills">
+      <button class="av-local-pill" [class.active]="selectedLocalId === ''" (click)="selectLocal('')">
+        Tous <span class="av-pill-count">{{ allVisites.length }}</span>
+      </button>
+      <button class="av-local-pill" *ngFor="let local of locaux"
+              [class.active]="selectedLocalId === local.id" (click)="selectLocal(local.id)">
+        {{ local.nom }}
+      </button>
+    </div>
+    <div class="av-active-filter" *ngIf="selectedLocalId">
+      <span class="av-active-filter-icon">◈</span>
+      <span>Local : <strong>{{ selectedLocalNom }}</strong></span>
+      <button class="av-active-filter-clear" (click)="selectLocal('')">✕</button>
+    </div>
+  </div>
+
+  <div class="av-divider"></div>
+
+  <div class="av-result-bar" *ngIf="!isLoading">
+    <span class="av-result-count">
+      {{ visites.length }} visite{{ visites.length !== 1 ? 's' : '' }}
+      <ng-container *ngIf="selectedLocalId"> · {{ selectedLocalNom }}</ng-container>
+      <ng-container *ngIf="showEnAttenteOnly"> · en attente</ng-container>
+      <ng-container *ngIf="showTodayOnly"> · aujourd'hui</ng-container>
+    </span>
+    <span class="av-result-hint" *ngIf="!showEnAttenteOnly">
+      Cliquez sur une visite pour voir ses détails
+    </span>
+  </div>
+
+  <!-- ── EMPTY STATE ── -->
+  <div class="av-empty" *ngIf="visites.length === 0 && !isLoading">
+    <div class="av-empty-icon">◈</div>
+    <div class="av-empty-title">
+      {{ showTodayOnly ? 'Aucune visite aujourd\'hui' : (showEnAttenteOnly ? 'Aucune visite en attente' : 'Aucune visite trouvée') }}
+    </div>
+    <div class="av-empty-sub">{{ selectedLocalId ? 'Pour ce local' : 'Modifiez vos filtres' }}</div>
+  </div>
+
+  <!-- ── LISTE ── -->
+  <div class="av-list" *ngIf="visites.length > 0">
+
+    <div class="av-card"
+         *ngFor="let v of visites; let i = index"
+         [style.animation-delay]="i * 0.05 + 's'"
+         [class.av-card-traitee]="!isEnAttente(v)"
+         [class.av-card-clickable]="!isEnAttente(v)"
+         (click)="!isEnAttente(v) && ouvrirDetail(v)">
+
+      <div class="av-card-num">#{{ (i + 1) | number:'3.0-0' }}</div>
+
+      <!-- Status bar bas de carte -->
+      <div class="av-status-bar"
+           [style.--s-color]="getStatutConfig(v.statut).color"
+           [style.--s-bg]="getStatutConfig(v.statut).bg">
+        <span class="av-status-dot"></span>
+        <span class="av-status-text">{{ getStatutConfig(v.statut).label }}</span>
+        <span class="av-status-hint" *ngIf="!isEnAttente(v)">Cliquer pour voir les détails →</span>
+      </div>
+
+      <!-- Infos -->
+      <div class="av-card-body">
+        <div class="av-info-block">
+          <div class="av-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Local
+          </div>
+          <div class="av-info-val">{{ getLocalNom(v) }}</div>
+        </div>
+
+        <div class="av-info-block">
+          <div class="av-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Client
+          </div>
+          <div class="av-info-val">{{ getClientNom(v) }}</div>
+          <div class="av-info-sub" *ngIf="v.clientId?.email">{{ v.clientId!.email }}</div>
+        </div>
+
+        <div class="av-info-block">
+          <div class="av-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Date
+          </div>
+          <div class="av-info-val av-date">{{ formatDate(v.date) }}</div>
+        </div>
+
+        <div class="av-info-block">
+          <div class="av-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Créneau
+          </div>
+          <div class="av-info-val av-creneau">{{ getCreneau(v) }}</div>
+        </div>
+
+        <div class="av-info-block">
+          <div class="av-info-label">Demandé le</div>
+          <div class="av-info-val av-created">{{ v.createdAt | date:'dd/MM/yyyy' }}</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════
+           ZONE D'ACTIONS — 3 cas selon le statut
+           ═══════════════════════════════════════════════════ -->
+
+      <!-- CAS 1 : EN ATTENTE → boutons Valider / Reporter / Refuser / Réserver local -->
+      <div class="av-card-actions" *ngIf="isEnAttente(v)" (click)="$event.stopPropagation()">
+        <button class="av-btn av-btn-valider" (click)="validerVisite(v)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Valider
+        </button>
+        <button class="av-btn av-btn-reporter" (click)="ouvrirReporter(v)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Reporter
+        </button>
+        <button class="av-btn av-btn-refuser" (click)="ouvrirMotifRefus(v)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Refuser
+        </button>
+      </div>
+
+      <!-- CAS 2 : VALIDÉE → choix "Réserver le local" ou "Ne convient pas"
+           Si déjà décidé : affiche le badge correspondant -->
+      <div class="av-card-resa-zone"
+           *ngIf="v.statut === 'Validée'"
+           (click)="$event.stopPropagation()">
+
+        <!-- Pas encore de décision de réservation -->
+        <ng-container *ngIf="!getResaDecision(v._id)">
+          <div class="av-resa-label">Local :</div>
+          <button class="av-btn av-btn-reserver" (click)="ouvrirReservation(v)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Réserver
+          </button>
+          <button class="av-btn av-btn-ne-convient-pas" (click)="marquerNeConvientPas(v._id)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Ne convient pas
+          </button>
+        </ng-container>
+
+        <!-- Décision déjà prise : badge figé -->
+        <div class="av-resa-badge av-resa-badge-ok" *ngIf="getResaDecision(v._id) === 'reserve'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+         Local {{ getLocalNom(v) }} Réservé
+        </div>
+        <div class="av-resa-badge av-resa-badge-ko" *ngIf="getResaDecision(v._id) === 'ne_convient_pas'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Ne convient pas
+        </div>
+
+      </div>
+
+      <!-- CAS 3 : AUTRE STATUT TRAITÉ (Refusée, Reportée, Annulée) → juste "Voir détails" -->
+      <div class="av-card-done"
+           *ngIf="!isEnAttente(v) && v.statut !== 'Validée'">
+        <div class="av-card-done-detail">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               [attr.stroke]="getStatutConfig(v.statut).color" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          <span [style.color]="getStatutConfig(v.statut).color">Voir détails</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL DÉTAIL VISITE                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="av-modal-overlay" [class.active]="isDetailModalOpen" (click)="fermerDetail()">
+  <div class="av-modal av-modal-detail" (click)="$event.stopPropagation()" *ngIf="visiteDetail">
+
+    <div class="av-detail-statut-band"
+         [style.background]="getStatutConfig(visiteDetail.statut).bg"
+         [style.border-color]="getStatutConfig(visiteDetail.statut).border">
+      <span class="av-detail-statut-icon">{{ getStatutConfig(visiteDetail.statut).icon }}</span>
+      <span class="av-detail-statut-label" [style.color]="getStatutConfig(visiteDetail.statut).color">
+        {{ getStatutConfig(visiteDetail.statut).label }}
+      </span>
+    </div>
+
+    <div class="av-modal-header">
+      <div>
+        <div class="av-modal-tag">// Détail de la visite</div>
+        <div class="av-modal-title">{{ getLocalNom(visiteDetail) }}</div>
+        <div class="av-modal-sub">Demandé le {{ visiteDetail.createdAt | date:'dd/MM/yyyy à HH:mm' }}</div>
+      </div>
+      <button class="av-modal-close" (click)="fermerDetail()">✕</button>
+    </div>
+
+    <div class="av-modal-body">
+      <div class="av-detail-grid">
+        <div class="av-detail-block">
+          <div class="av-detail-block-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Client
+          </div>
+          <div class="av-detail-block-val">{{ getClientNom(visiteDetail) }}</div>
+          <div class="av-detail-block-sub" *ngIf="visiteDetail.clientId?.email">
+            {{ visiteDetail.clientId!.email }}
+          </div>
+        </div>
+
+        <div class="av-detail-block">
+          <div class="av-detail-block-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Local
+          </div>
+          <div class="av-detail-block-val">{{ getLocalNom(visiteDetail) }}</div>
+        </div>
+
+        <div class="av-detail-block av-detail-block-wide">
+          <div class="av-detail-block-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Date de visite
+          </div>
+          <div class="av-detail-block-val av-detail-date">{{ formatDate(visiteDetail.date) }}</div>
+        </div>
+
+        <div class="av-detail-block">
+          <div class="av-detail-block-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Créneau horaire
+          </div>
+          <div class="av-detail-block-val av-detail-creneau">{{ getCreneau(visiteDetail) }}</div>
+        </div>
+
+        <div class="av-detail-block">
+          <div class="av-detail-block-label">Statut actuel</div>
+          <div class="av-detail-statut-pill"
+               [style.color]="getStatutConfig(visiteDetail.statut).color"
+               [style.background]="getStatutConfig(visiteDetail.statut).bg"
+               [style.border-color]="getStatutConfig(visiteDetail.statut).border">
+            {{ getStatutConfig(visiteDetail.statut).icon }}
+            {{ getStatutConfig(visiteDetail.statut).label }}
+          </div>
+        </div>
+      </div>
+
+      <div class="av-detail-timeline">
+        <div class="av-detail-tl-label">// Historique</div>
+        <div class="av-detail-tl-item">
+          <div class="av-detail-tl-dot av-tl-done"></div>
+          <div class="av-detail-tl-line"></div>
+          <div class="av-detail-tl-content">
+            <div class="av-detail-tl-title">Demande soumise</div>
+            <div class="av-detail-tl-date">{{ visiteDetail.createdAt | date:'dd/MM/yyyy à HH:mm' }}</div>
+          </div>
+        </div>
+        <div class="av-detail-tl-item">
+          <div class="av-detail-tl-dot"
+               [class.av-tl-done]="visiteDetail.statut !== 'en attente de confirmation'"
+               [class.av-tl-pending]="visiteDetail.statut === 'en attente de confirmation'"
+               [style.--tl-color]="getStatutConfig(visiteDetail.statut).color"></div>
+          <div class="av-detail-tl-content">
+            <div class="av-detail-tl-title"
+                 [style.color]="visiteDetail.statut !== 'en attente de confirmation' ? getStatutConfig(visiteDetail.statut).color : ''">
+              {{ visiteDetail.statut === 'en attente de confirmation' ? 'En attente de décision…' : 'Décision : ' + getStatutConfig(visiteDetail.statut).label }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="av-modal-footer">
+      <button class="av-modal-btn-cancel" (click)="fermerDetail()">Fermer</button>
+
+      <!-- Actions visite : EN ATTENTE seulement -->
+      <ng-container *ngIf="isEnAttente(visiteDetail)">
+        <button class="av-modal-btn-action reporter" (click)="ouvrirReporterDepuisDetail(visiteDetail)">
+          📅 Reporter
+        </button>
+        <button class="av-modal-btn-action refuser" (click)="ouvrirRefusDepuisDetail(visiteDetail)">
+          ❌ Refuser
+        </button>
+        <button class="av-modal-btn-action valider" (click)="validerDepuisDetail(visiteDetail)">
+          ✅ Valider
+        </button>
+      </ng-container>
+
+      <!-- Réservation locale : VALIDÉE, pas encore décidé -->
+      <ng-container *ngIf="visiteDetail.statut === 'Validée' && !getResaDecision(visiteDetail._id)">
+        <button class="av-modal-btn-action ne-convient-pas" (click)="marquerNeConvientPasEtFermer(visiteDetail._id)">
+          ✕ Ne convient pas
+        </button>
+        <button class="av-modal-btn-action reserver" (click)="ouvrirReservationDepuisDetail(visiteDetail)">
+          🏠 Réserver
+        </button>
+      </ng-container>
+
+      <!-- Badge figé si décision déjà prise -->
+      <div class="av-resa-badge av-resa-badge-ok"
+           *ngIf="visiteDetail.statut === 'Validée' && getResaDecision(visiteDetail._id) === 'reserve'">
+        ✅ Réservé
+      </div>
+      <div class="av-resa-badge av-resa-badge-ko"
+           *ngIf="visiteDetail.statut === 'Validée' && getResaDecision(visiteDetail._id) === 'ne_convient_pas'">
+        ✕ Ne convient pas
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL REPORTER                                             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="av-modal-overlay" [class.active]="isReporterModalOpen" (click)="closeReporterModal()">
+  <div class="av-modal" (click)="$event.stopPropagation()" *ngIf="visiteEnCours">
+    <div class="av-modal-header">
+      <div>
+        <div class="av-modal-tag">// Reporter une visite</div>
+        <div class="av-modal-title">Nouvelle date</div>
+        <div class="av-modal-sub">
+          <strong>{{ getLocalNom(visiteEnCours) }}</strong> · {{ getClientNom(visiteEnCours) }}
+        </div>
+      </div>
+      <button class="av-modal-close" (click)="closeReporterModal()">✕</button>
+    </div>
+    <div class="av-modal-body">
+      <div class="av-current-date">
+        <span class="av-current-label">Date actuelle :</span>
+        <span class="av-current-val">{{ formatDate(visiteEnCours.date) }} · {{ getCreneau(visiteEnCours) }}</span>
+      </div>
+      <div class="av-form-group">
+        <label>Nouvelle date <span class="req">*</span></label>
+        <input type="date" [(ngModel)]="reportForm.nouvelleDate" [min]="today()">
+      </div>
+      <div class="av-form-row">
+        <div class="av-form-group">
+          <label>Heure début <span class="req">*</span></label>
+          <select [(ngModel)]="reportForm.nouvelleHeureDebut">
+            <option value="">— Choisir —</option>
+            <option *ngFor="let h of CRENEAUX" [value]="h">{{ h }}h00</option>
+          </select>
+        </div>
+        <div class="av-form-group">
+          <label>Heure fin <span class="req">*</span></label>
+          <select [(ngModel)]="reportForm.nouvelleHeureFin">
+            <option value="">— Choisir —</option>
+            <option *ngFor="let h of CRENEAUX" [value]="h">{{ h }}h00</option>
+          </select>
+        </div>
+      </div>
+      <div class="av-form-group">
+        <label>Motif <span class="av-optional">(optionnel)</span></label>
+        <textarea [(ngModel)]="reportForm.motif" rows="3" placeholder="Expliquez la raison du report au client…"></textarea>
+      </div>
+    </div>
+    <div class="av-modal-footer">
+      <button class="av-modal-btn-cancel" (click)="closeReporterModal()">Annuler</button>
+      <button class="av-modal-btn-confirm reporter" (click)="confirmerReport()" [disabled]="isSubmitting">
+        <span *ngIf="!isSubmitting">📅 Confirmer le report</span>
+        <span *ngIf="isSubmitting">Enregistrement…</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL REFUS                                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="av-modal-overlay" [class.active]="isMotifModalOpen" (click)="closeMotifModal()">
+  <div class="av-modal av-modal-sm" (click)="$event.stopPropagation()" *ngIf="visiteARefuser">
+    <div class="av-modal-header">
+      <div>
+        <div class="av-modal-tag refus">// Refuser une visite</div>
+        <div class="av-modal-title">Motif du refus</div>
+        <div class="av-modal-sub">
+          <strong>{{ getLocalNom(visiteARefuser) }}</strong> · {{ getClientNom(visiteARefuser) }}
+        </div>
+      </div>
+      <button class="av-modal-close" (click)="closeMotifModal()">✕</button>
+    </div>
+    <div class="av-modal-body">
+      <div class="av-form-group">
+        <label>Motif <span class="av-optional">(optionnel)</span></label>
+        <textarea [(ngModel)]="motifRefus" rows="4" placeholder="Indiquez la raison du refus au client…"></textarea>
+      </div>
+    </div>
+    <div class="av-modal-footer">
+      <button class="av-modal-btn-cancel" (click)="closeMotifModal()">Annuler</button>
+      <button class="av-modal-btn-confirm refuser" (click)="confirmerRefus()">❌ Confirmer le refus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL RÉSERVATION                                          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="av-modal-overlay" [class.active]="isReservationModalOpen" (click)="closeReservationModal()">
+  <div class="av-modal" (click)="$event.stopPropagation()" *ngIf="visiteAReserver">
+    <div class="av-modal-header">
+      <div>
+        <div class="av-modal-tag reserver">// Réserver un local</div>
+        <div class="av-modal-title">Nouvelle réservation</div>
+        <div class="av-modal-sub">
+          <strong>{{ getLocalNom(visiteAReserver) }}</strong> · {{ getClientNom(visiteAReserver) }}
+        </div>
+      </div>
+      <button class="av-modal-close" (click)="closeReservationModal()">✕</button>
+    </div>
+    <div class="av-modal-body">
+      <div class="av-current-date">
+        <span class="av-current-label">Visite du :</span>
+        <span class="av-current-val">{{ formatDate(visiteAReserver.date) }} · {{ getCreneau(visiteAReserver) }}</span>
+      </div>
+      <div class="av-form-row">
+        <div class="av-form-group">
+          <label>Durée (mois) <span class="req">*</span></label>
+          <input type="number" [(ngModel)]="reservationForm.duree" min="1" max="36" placeholder="Ex: 12">
+        </div>
+        <div class="av-form-group">
+          <label>Prix (Ar) <span class="req">*</span></label>
+          <input type="number" [(ngModel)]="reservationForm.prix" min="0" placeholder="Ex: 500000">
+        </div>
+      </div>
+      <div class="av-form-group">
+        <label>Statut initial</label>
+        <select [(ngModel)]="reservationForm.status">
+          <option value="En attente">En attente</option>
+          <option value="Confirmée">Confirmée</option>
+        </select>
+      </div>
+    </div>
+    <div class="av-modal-footer">
+      <button class="av-modal-btn-cancel" (click)="closeReservationModal()">Annuler</button>
+      <button class="av-modal-btn-confirm reserver" (click)="confirmerReservation()" [disabled]="isSubmitting">
+        <span *ngIf="!isSubmitting">🏠 Confirmer la réservation</span>
+        <span *ngIf="isSubmitting">Enregistrement…</span>
+      </button>
+    </div>
+  </div>
+</div>
+<app-footer-admin></app-footer-admin>

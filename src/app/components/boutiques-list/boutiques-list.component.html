@@ -1,0 +1,59 @@
+<div class="boutiques-container">
+  <div class="page-header">
+    <p class="subtitle">Découvrez une belle sélection de marques pour toutes vos envies.</p>
+  </div>
+
+  <div class="filters-bar">
+    <div class="filters-dropdown">
+      <button class="filters-btn" (click)="toggleFilters()">NOS CATEGORIES ▼</button>
+      <div class="filters-menu" *ngIf="showFilters" style="text-align: left">
+        <div *ngIf="loadingCategories" class="filter-loading">Chargement des catégories...</div>
+        <div *ngIf="categoriesError" class="filter-error">{{ categoriesError }}</div>
+        <div *ngIf="!loadingCategories && !categoriesError && categories.length === 0">
+          Aucune catégorie disponible.
+        </div>
+        <div class="filter-options" *ngIf="!loadingCategories && categories.length > 0">
+          <label *ngFor="let cat of categories" class="filter-option">
+            <input
+              type="checkbox"
+              [value]="cat._id"
+              (change)="onCategoryChange(cat._id, $event)"
+              [checked]="selectedCategories.has(cat._id)"
+            />
+            {{ cat.nom }}
+          </label>
+        </div>
+        <div class="filter-actions">
+          <button class="apply-btn" (click)="applyFilter()">Appliquer &gt;</button>
+        </div>
+      </div>
+    </div>
+    <span class="count">{{ filteredBoutiques.length }} boutique{{ filteredBoutiques.length > 1 ? 's' : '' }}</span>
+  </div>
+
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Chargement des boutiques...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && filteredBoutiques.length === 0" class="empty-message">
+    Aucune boutique trouvée.
+  </div>
+
+  <div class="boutiques-list" *ngIf="!loading && !error && filteredBoutiques.length > 0">
+    <div class="boutiques-grid">
+      <div *ngFor="let boutique of filteredBoutiques" class="boutique-card">
+        <a [routerLink]="['/home/boutique/detail', boutique._id]" class="boutique-card-link">
+          <div class="boutique-logo">
+            <img *ngIf="boutique.logo" [src]="getLogoUrl(boutique)" [alt]="boutique.nom">
+            <div *ngIf="!boutique.logo" class="no-logo">Pas de logo</div>
+          </div>
+          <div class="boutique-name">{{ boutique.nom }}</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>

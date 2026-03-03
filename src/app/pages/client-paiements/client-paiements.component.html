@@ -1,0 +1,293 @@
+<div class="cp-overlay" [class.active]="isLoading">
+  <div class="cp-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="cp-toast" [class.show]="isToastVisible" [class.error]="toastType === 'error'">
+  <div class="cp-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<div class="cp-page">
+
+  <!-- ── HEADER ── -->
+  <div class="cp-header">
+    <div>
+      <h1 class="cp-title">Mes <em>loyers</em></h1>
+      <div class="cp-subtitle">Suivez vos paiements et soumettez vos preuves</div>
+    </div>
+    <button class="cp-refresh-btn" (click)="loadLoyers()" [disabled]="isLoading">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Actualiser
+    </button>
+  </div>
+
+  <div class="cp-divider"></div>
+
+  <!-- ── RÉSUMÉ ── -->
+  <div class="cp-resume" *ngIf="resume">
+
+    <div class="cp-resume-card cp-resume-principal">
+      <div class="cp-resume-label">Loyer mensuel</div>
+      <div class="cp-resume-montant">{{ formatPrix(resume.loyerMensuel) }}</div>
+      <div class="cp-resume-sub">{{ resume.duree }} mois · {{ resume.moisRestants }} restants</div>
+    </div>
+
+    <div class="cp-resume-card">
+      <div class="cp-resume-label">Total payé</div>
+      <div class="cp-resume-montant cp-vert">{{ formatPrix(resume.totalPaye) }}</div>
+      <div class="cp-prog-track">
+        <div class="cp-prog-fill" [style.width]="getProgressionPct() + '%'"></div>
+      </div>
+      <div class="cp-resume-sub">{{ getProgressionPct() }}% du total</div>
+    </div>
+
+    <div class="cp-resume-card">
+      <div class="cp-resume-label">Reste à payer</div>
+      <div class="cp-resume-montant" [class.cp-rouge]="resume.totalRestant > 0">
+        {{ formatPrix(resume.totalRestant) }}
+      </div>
+      <div class="cp-resume-sub cp-rouge" *ngIf="resume.nombreEnRetard > 0">
+        ⚠ {{ resume.nombreEnRetard }} mois en retard
+      </div>
+      <div class="cp-resume-sub cp-vert" *ngIf="resume.nombreEnRetard === 0">
+        ✓ Aucun retard
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── FILTRES ── -->
+  <div class="cp-filtres">
+    <button class="cp-filtre-btn" [class.active]="filtreStatut === 'tous'" (click)="setFiltre('tous')">
+      Tous <span class="cp-filtre-count">{{ loyers.length }}</span>
+    </button>
+    <button class="cp-filtre-btn" [class.active]="filtreStatut === 'en attente'" (click)="setFiltre('en attente')">
+      En attente
+    </button>
+    <button class="cp-filtre-btn cp-filtre-rouge" [class.active]="filtreStatut === 'en retard'" (click)="setFiltre('en retard')">
+      En retard
+    </button>
+    <button class="cp-filtre-btn cp-filtre-vert" [class.active]="filtreStatut === 'paye'" (click)="setFiltre('paye')">
+      Payés
+    </button>
+  </div>
+
+  <!-- ── EMPTY ── -->
+  <div class="cp-empty" *ngIf="loyers.length === 0 && !isLoading">
+    <div class="cp-empty-icon">◈</div>
+    <div class="cp-empty-title">Aucun loyer</div>
+    <div class="cp-empty-sub">Votre contrat n'est pas encore actif</div>
+  </div>
+
+  <!-- ── LISTE LOYERS ── -->
+  <div class="cp-list" *ngIf="loyersFiltres.length > 0">
+    <div class="cp-loyer-card"
+         *ngFor="let l of loyersFiltres; let i = index"
+         [style.animation-delay]="i * 0.04 + 's'"
+         [class.cp-card-retard]="l.estEnRetard"
+         [class.cp-card-paye]="l.statut === 'paye'">
+
+      <!-- Bande statut gauche -->
+      <div class="cp-statut-bande"
+           [style.background]="getStatutConfig(l.statut, l.statutPreuve).color">
+      </div>
+
+      <!-- Mois -->
+      <div class="cp-loyer-mois">
+        <div class="cp-mois-label">{{ l.moisLabel }}</div>
+        <div class="cp-mois-echeance">
+          Échéance : {{ l.dateEcheance | date:'dd/MM/yyyy' }}
+        </div>
+        <div class="cp-jours-retard" *ngIf="l.estEnRetard">
+          {{ l.joursRetard }} jour{{ l.joursRetard > 1 ? 's' : '' }} de retard
+        </div>
+      </div>
+
+      <!-- Montants -->
+      <div class="cp-loyer-montants">
+        <div class="cp-montant-row">
+          <span class="cp-montant-key">Dû</span>
+          <span class="cp-montant-val">{{ formatPrix(l.montantDu) }}</span>
+        </div>
+        <div class="cp-montant-row" *ngIf="l.montantPaye > 0">
+          <span class="cp-montant-key">Payé</span>
+          <span class="cp-montant-val cp-vert">{{ formatPrix(l.montantPaye) }}</span>
+        </div>
+        <div class="cp-montant-row" *ngIf="l.resteAPayer > 0">
+          <span class="cp-montant-key">Reste</span>
+          <span class="cp-montant-val cp-rouge">{{ formatPrix(l.resteAPayer) }}</span>
+        </div>
+      </div>
+
+      <!-- Statut badge -->
+      <div class="cp-loyer-statut">
+        <div class="cp-statut-badge"
+             [style.color]="getStatutConfig(l.statut, l.statutPreuve).color"
+             [style.background]="getStatutConfig(l.statut, l.statutPreuve).bg"
+             [style.border-color]="getStatutConfig(l.statut, l.statutPreuve).border">
+          <span>{{ getStatutConfig(l.statut, l.statutPreuve).icon }}</span>
+          {{ getStatutConfig(l.statut, l.statutPreuve).label }}
+        </div>
+
+        <!-- Note si preuve rejetée -->
+        <div class="cp-note-rejet" *ngIf="l.statutPreuve === 'rejetee' && l.note">
+          {{ l.note }}
+        </div>
+
+        <!-- Mode paiement si payé -->
+        <div class="cp-mode-paiement" *ngIf="l.statut === 'paye' && l.modePaiement">
+          via {{ l.modePaiement }}
+        </div>
+      </div>
+
+      <!-- Action -->
+      <div class="cp-loyer-action">
+        <!-- Payer -->
+        <button class="cp-btn-payer"
+                *ngIf="peutPayer(l)"
+                (click)="ouvrirModal(l)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+          Soumettre preuve
+        </button>
+
+        <!-- En attente validation -->
+        <div class="cp-badge-attente" *ngIf="l.statutPreuve === 'en_attente_validation'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          En cours de validation
+        </div>
+
+        <!-- Payé -->
+        <div class="cp-badge-paye" *ngIf="l.statut === 'paye'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Loyer confirmé
+          <span *ngIf="l.datePaiement"> · {{ l.datePaiement | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Empty filtre -->
+  <div class="cp-empty" *ngIf="loyers.length > 0 && loyersFiltres.length === 0">
+    <div class="cp-empty-icon">⊘</div>
+    <div class="cp-empty-title">Aucun loyer dans cette catégorie</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- MODAL SOUMISSION PREUVE                                -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="cp-modal-overlay" [class.active]="isModalOpen" (click)="fermerModal()">
+  <div class="cp-modal" (click)="$event.stopPropagation()" *ngIf="loyerSelectionne">
+
+    <div class="cp-modal-header">
+      <div>
+        <div class="cp-modal-tag">// Soumission de preuve</div>
+        <div class="cp-modal-title">{{ loyerSelectionne.moisLabel }}</div>
+        <div class="cp-modal-sub">
+          Montant dû : <strong>{{ formatPrix(loyerSelectionne.resteAPayer) }}</strong>
+        </div>
+      </div>
+      <button class="cp-modal-close" (click)="fermerModal()">✕</button>
+    </div>
+
+    <div class="cp-modal-body">
+
+      <!-- Choix mode paiement -->
+      <div class="cp-field-group">
+        <div class="cp-field-label">Mode de paiement</div>
+        <div class="cp-mode-grid">
+          <button class="cp-mode-btn"
+                  [class.selected]="modePaiement === 'mvola'"
+                  (click)="modePaiement = 'mvola'">
+            <div class="cp-mode-icon">📱</div>
+            <div class="cp-mode-name">MVola</div>
+          </button>
+          <button class="cp-mode-btn"
+                  [class.selected]="modePaiement === 'orange_money'"
+                  (click)="modePaiement = 'orange_money'">
+            <div class="cp-mode-icon">🟠</div>
+            <div class="cp-mode-name">Orange Money</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Référence transaction -->
+      <div class="cp-field-group">
+        <div class="cp-field-label">Référence de transaction <span class="cp-optional">(optionnel)</span></div>
+        <input class="cp-input"
+               type="text"
+               [(ngModel)]="referenceTransaction"
+               placeholder="Ex: MVola#1234567890">
+      </div>
+
+      <!-- Upload preuve -->
+      <div class="cp-field-group">
+        <div class="cp-field-label">Capture d'écran / Preuve de paiement <span class="cp-required">*</span></div>
+
+        <div class="cp-upload-zone"
+             [class.has-file]="fichierPreuve"
+             [class.drag-over]="dragOver"
+             (dragover)="onDragOver($event)"
+             (dragleave)="onDragLeave()"
+             (drop)="onDrop($event)"
+             (click)="triggerFileInput()">
+
+          <input type="file"
+                 id="preuve-input"
+                 accept=".jpg,.jpeg,.png,.pdf"
+                 style="display:none"
+                 (change)="onFileChange($event)">
+
+          <ng-container *ngIf="!fichierPreuve">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="cp-upload-icon">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="cp-upload-text">Glisser-déposer ou <span class="cp-upload-link">parcourir</span></div>
+            <div class="cp-upload-hint">JPG, PNG, PDF — 5 Mo max</div>
+          </ng-container>
+
+          <ng-container *ngIf="fichierPreuve">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cp-file-ok-icon">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <div class="cp-file-name">{{ fichierPreuve.name }}</div>
+            <div class="cp-file-size">{{ formatSize(fichierPreuve.size) }}</div>
+            <button class="cp-file-remove" (click)="supprimerFichier($event)">✕ Retirer</button>
+          </ng-container>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cp-modal-footer">
+      <button class="cp-btn-cancel" (click)="fermerModal()">Annuler</button>
+      <button class="cp-btn-submit"
+              (click)="soumettrePreuve()"
+              [disabled]="!fichierPreuve || isSubmitting">
+        <svg *ngIf="!isSubmitting" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <ng-container *ngIf="!isSubmitting">Soumettre la preuve</ng-container>
+        <ng-container *ngIf="isSubmitting">Envoi en cours…</ng-container>
+      </button>
+    </div>
+
+  </div>
+</div>

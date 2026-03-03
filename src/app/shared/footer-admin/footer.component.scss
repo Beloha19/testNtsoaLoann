@@ -1,0 +1,342 @@
+/* footer-admin.component.css */
+
+:host {
+  --noir:        #0a0a0b;
+  --noir-2:      #111113;
+  --noir-3:      #18181c;
+  --border:      rgba(255,255,255,0.07);
+  --border-gold: rgba(196,160,90,0.3);
+  --or:          #c4a05a;
+  --or-light:    #e8c97a;
+  --or-pale:     rgba(196,160,90,0.08);
+  --blanc:       #f0ece4;
+  --gris:        #7a7870;
+  --gris-clair:  #b0aca4;
+  --accent:      #2a9d8f;
+  display: block;
+}
+
+/* ── Conteneur ────────────────────────────────────────────── */
+.ms-footer {
+  background: var(--noir-2);
+  border-top: 1px solid var(--border-gold);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glow décoratif de fond */
+.ms-footer__glow {
+  position: absolute;
+  bottom: -120px; left: 50%;
+  transform: translateX(-50%);
+  width: 700px; height: 300px;
+  background: radial-gradient(ellipse, rgba(196,160,90,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Top section ──────────────────────────────────────────── */
+.ms-footer__top {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 48px;
+  padding: 64px 48px 48px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+/* — Brand — */
+.ms-footer__logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--blanc);
+  display: block;
+  margin-bottom: 16px;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.ms-footer__logo span { color: var(--or); }
+.ms-footer__logo:hover { color: var(--or-light); }
+
+.ms-footer__tagline {
+  font-size: 13px;
+  color: var(--gris-clair);
+  line-height: 1.7;
+  max-width: 280px;
+  margin-bottom: 28px;
+}
+
+.ms-footer__socials {
+  display: flex;
+  gap: 10px;
+}
+.ms-footer__social-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gris);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: none;
+}
+.ms-footer__social-btn:hover {
+  border-color: var(--or);
+  color: var(--or);
+  background: var(--or-pale);
+}
+
+/* — Colonnes nav — */
+.ms-footer__col-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--or);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ms-footer__col-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-gold);
+}
+
+.ms-footer__links {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ms-footer__links a {
+  font-size: 13px;
+  color: var(--gris-clair);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 0.3s, padding-left 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  padding-left: 0;
+}
+.ms-footer__links a::before {
+  content: '—';
+  color: var(--or);
+  font-size: 10px;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  white-space: nowrap;
+}
+.ms-footer__links a:hover {
+  color: var(--or);
+  padding-left: 14px;
+}
+.ms-footer__links a:hover::before {
+  opacity: 1;
+  max-width: 20px;
+  margin-right: 6px;
+  position: absolute;
+  left: 0;
+}
+
+/* ── Newsletter ───────────────────────────────────────────── */
+.ms-footer__newsletter {
+  padding: 32px 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  position: relative;
+}
+
+.ms-footer__nl-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--or);
+  margin-bottom: 8px;
+}
+.ms-footer__nl-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--blanc);
+}
+.ms-footer__nl-title em { font-style: italic; color: var(--or); }
+
+.ms-footer__nl-form {
+  display: flex;
+  gap: 0;
+  flex: 1;
+  max-width: 420px;
+}
+.ms-footer__nl-input {
+  flex: 1;
+  background: var(--noir-3);
+  border: 1px solid var(--border);
+  border-right: none;
+  color: var(--blanc);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: all 0.3s;
+}
+.ms-footer__nl-input::placeholder { color: var(--gris); }
+.ms-footer__nl-input:focus {
+  border-color: var(--or);
+  background: var(--noir-2);
+}
+.ms-footer__nl-btn {
+  background: var(--or);
+  border: none;
+  color: var(--noir);
+  padding: 12px 24px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.ms-footer__nl-btn:hover { background: var(--or-light); }
+
+.ms-footer__nl-success {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+
+/* ── Stats bar ────────────────────────────────────────────── */
+.ms-footer__stats {
+  padding: 0 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  position: relative;
+}
+.ms-footer__stat {
+  flex: 1;
+  text-align: center;
+  padding: 24px;
+  border-right: 1px solid var(--border);
+  transition: background 0.3s;
+}
+.ms-footer__stat:last-child { border-right: none; }
+.ms-footer__stat:hover { background: rgba(196,160,90,0.03); }
+
+.ms-footer__stat-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--or);
+  line-height: 1;
+  display: block;
+}
+.ms-footer__stat-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gris);
+  display: block;
+  margin-top: 6px;
+}
+
+/* ── Bottom bar ───────────────────────────────────────────── */
+.ms-footer__bottom {
+  padding: 20px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+}
+
+.ms-footer__copy {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--gris);
+}
+.ms-footer__copy span { color: var(--or); }
+
+.ms-footer__legal {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.ms-footer__legal a {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--gris);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.ms-footer__legal a:hover { color: var(--or); }
+
+.ms-footer__indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ms-footer__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(42,157,143,0.5); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 6px rgba(42,157,143,0); }
+}
+.ms-footer__status {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .ms-footer__top { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .ms-footer__newsletter { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .ms-footer__nl-form { max-width: 100%; width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .ms-footer__top { grid-template-columns: 1fr; padding: 40px 20px 32px; gap: 28px; }
+  .ms-footer__newsletter { padding: 24px 20px; }
+  .ms-footer__stats { flex-wrap: wrap; padding: 0 0; }
+  .ms-footer__stat {
+    width: 50%; flex: none;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .ms-footer__stat:nth-child(even) { border-right: none; }
+  .ms-footer__stat:nth-last-child(-n+2) { border-bottom: none; }
+  .ms-footer__bottom { flex-direction: column; padding: 20px; gap: 16px; text-align: center; }
+  .ms-footer__legal { gap: 16px; flex-wrap: wrap; justify-content: center; }
+}

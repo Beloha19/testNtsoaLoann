@@ -1,0 +1,210 @@
+<div class="rv-overlay" *ngIf="isLoading">
+  <div class="rv-spinner"></div>
+  <p class="rv-spinner-label">Chargement des disponibilités…</p>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="rv-success" *ngIf="submitSuccess">
+  <div class="rv-success-icon">✓</div>
+  <div class="rv-success-title">Visite confirmée</div>
+  <p class="rv-success-sub">{{ selectedDate | date:'EEEE d MMMM yyyy':'':'fr' }} · {{ selectedCreneau }}</p>
+  <button class="rv-success-btn" (click)="goBack()">← Retour aux espaces</button>
+</div>
+
+<!-- PAGE -->
+<div class="rv-page" *ngIf="!submitSuccess">
+
+  <!-- Header -->
+  <div class="rv-header">
+    <button class="rv-back" (click)="goBack()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+      </svg>
+      Retour
+    </button>
+    <div class="rv-header-center">
+      <div class="rv-page-label">// Réservation de visite</div>
+      <h1 class="rv-page-title">Planifier une <em>visite</em></h1>
+      <div class="rv-local-name" *ngIf="localName">{{ localName }}</div>
+    </div>
+    <div class="rv-header-right"></div>
+  </div>
+
+  <!-- Body -->
+  <div class="rv-body">
+
+    <!-- ══ COLONNE GAUCHE : calendrier ══ -->
+    <div class="rv-calendar-col">
+
+      <!-- Navigation mois -->
+      <div class="rv-cal-nav">
+        <button class="rv-cal-arrow" (click)="prevMonth()" [disabled]="isPrevMonthDisabled()">‹</button>
+        <div class="rv-cal-month">
+          <span class="rv-cal-month-name">{{ currentMonthLabel }}</span>
+          <span class="rv-cal-year">{{ currentYear }}</span>
+        </div>
+        <button class="rv-cal-arrow" (click)="nextMonth()">›</button>
+      </div>
+
+      <!-- Jours de la semaine -->
+      <div class="rv-cal-weekdays">
+        <div class="rv-cal-wd" *ngFor="let d of WEEKDAYS">{{ d }}</div>
+      </div>
+
+      <!-- Grille des jours -->
+      <div class="rv-cal-grid">
+        <div
+          *ngFor="let cell of calendarCells"
+          class="rv-cal-cell"
+          [class.empty]="!cell.date"
+          [class.past]="cell.isPast"
+          [class.weekend]="cell.isWeekend && !cell.isPast"
+          [class.holiday]="cell.isHoliday && !cell.isPast"
+          [class.available]="cell.isAvailable"
+          [class.taken]="cell.isTaken"
+          [class.selected]="cell.date && isSameDay(cell.date, selectedDate)"
+          [class.today]="cell.isToday"
+          (click)="cell.isAvailable && selectDate(cell.date!)">
+
+          <span class="rv-cal-day" *ngIf="cell.date">{{ cell.date | date:'d' }}</span>
+          <span class="rv-cal-dot" *ngIf="cell.isAvailable"></span>
+          <span class="rv-cal-dot taken-dot" *ngIf="cell.isTaken"></span>
+
+          <!-- Tooltip -->
+          <div class="rv-cal-tooltip" *ngIf="cell.date && (cell.isWeekend || cell.isHoliday || cell.isTaken)">
+            <span *ngIf="cell.isHoliday">{{ cell.holidayName }}</span>
+            <span *ngIf="cell.isWeekend && !cell.isHoliday">Week-end</span>
+            <span *ngIf="cell.isTaken && !cell.isHoliday && !cell.isWeekend">Créneaux complets</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Légende -->
+      <div class="rv-legend">
+        <div class="rv-legend-item">
+          <span class="rv-legend-dot available"></span>
+          <span>Disponible</span>
+        </div>
+        <div class="rv-legend-item">
+          <span class="rv-legend-dot taken"></span>
+          <span>Complet</span>
+        </div>
+        <div class="rv-legend-item">
+          <span class="rv-legend-dot selected"></span>
+          <span>Sélectionné</span>
+        </div>
+        <div class="rv-legend-item">
+          <span class="rv-legend-dot weekend"></span>
+          <span>Week-end</span>
+        </div>
+        <div class="rv-legend-item">
+          <span class="rv-legend-dot holiday"></span>
+          <span>Férié</span>
+        </div>
+        <div class="rv-legend-item">
+          <span class="rv-legend-dot past"></span>
+          <span>Passé</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ COLONNE DROITE : créneaux + formulaire ══ -->
+    <div class="rv-form-col">
+
+      <!-- Récap date sélectionnée -->
+      <div class="rv-selected-date" *ngIf="selectedDate">
+        <div class="rv-selected-label">// Date sélectionnée</div>
+        <div class="rv-selected-val">{{ selectedDate | date:'EEEE d MMMM yyyy':'':'fr' }}</div>
+      </div>
+
+      <!-- Placeholder aucune date -->
+      <div class="rv-no-date" *ngIf="!selectedDate">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <p>Sélectionnez une date disponible<br>dans le calendrier</p>
+      </div>
+
+      <!-- Créneaux horaires -->
+      <div class="rv-creneaux-section" *ngIf="selectedDate">
+
+        <div class="rv-section-title">
+          <span class="rv-section-num">01</span>
+          Créneaux disponibles
+        </div>
+
+        <!-- Grille créneaux -->
+        <div class="rv-creneaux-grid">
+          <div
+            *ngFor="let c of CRENEAUX_POSSIBLES"
+            class="rv-creneau"
+            [class.creneau-dispo]="isCreneauDispo(c)"
+            [class.creneau-pris]="!isCreneauDispo(c)"
+            [class.creneau-selected]="selectedCreneau === c"
+            (click)="isCreneauDispo(c) && selectCreneau(c)">
+
+            <span class="rv-creneau-time">{{ c }}</span>
+            <span class="rv-creneau-status">
+              <span *ngIf="isCreneauDispo(c)">Libre</span>
+              <span *ngIf="!isCreneauDispo(c)">Pris</span>
+            </span>
+
+            <!-- Tooltip pris -->
+            <div class="rv-creneau-tooltip" *ngIf="!isCreneauDispo(c)">
+              Créneau déjà réservé
+            </div>
+
+          </div>
+        </div>
+
+        <div class="rv-creneaux-empty" *ngIf="CRENEAUX_POSSIBLES.length === 0">
+          Aucun créneau disponible pour cette date.
+        </div>
+
+      </div>
+
+      <!-- Formulaire recap + submit -->
+      <div class="rv-form" *ngIf="selectedDate && selectedCreneau">
+
+        <div class="rv-section-title">
+          <span class="rv-section-num">02</span>
+          Récapitulatif
+        </div>
+
+        <div class="rv-recap">
+          <div class="rv-recap-row">
+            <span class="rv-recap-key">Local</span>
+            <span class="rv-recap-val">{{ localName || '—' }}</span>
+          </div>
+          <div class="rv-recap-row">
+            <span class="rv-recap-key">Date</span>
+            <span class="rv-recap-val">{{ selectedDate | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="rv-recap-row">
+            <span class="rv-recap-key">Créneau</span>
+            <span class="rv-recap-val" style="color:var(--or)">{{ selectedCreneau }}</span>
+          </div>
+        </div>
+
+        <!-- Erreur globale -->
+        <div class="rv-submit-error" *ngIf="submitError">
+          <span>⚠</span> {{ submitError }}
+        </div>
+
+        <!-- Bouton submit -->
+        <button class="rv-btn-submit" (click)="onSubmit()" [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting">Confirmer la visite →</span>
+          <span *ngIf="isSubmitting">Enregistrement…</span>
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

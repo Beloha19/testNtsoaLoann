@@ -1,0 +1,71 @@
+<div class="detail-container">
+  <!-- Lien retour en haut -->
+  <a routerLink="/home/boutiques" class="back-link-top">← Retour aux boutiques</a>
+
+  <!-- Informations boutique -->
+  <div *ngIf="loadingBoutique" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Chargement de la boutique...</p>
+  </div>
+  <div *ngIf="errorBoutique" class="error-message">{{ errorBoutique }}</div>
+
+  <div *ngIf="boutique && !loadingBoutique && !errorBoutique" class="boutique-info">
+    <!-- Logo centré -->
+    <div class="boutique-header-container">
+      <div class="boutique-info-col">
+        <div class="logo-centered" *ngIf="boutique.logo">
+          <img [src]="getLogoUrl(boutique)" [alt]="boutique.nom" class="boutique-logo-centered">
+        </div>
+        <div class="boutique-details">
+          <p class="description">{{ boutique.description }}</p>
+          <p class="telephone"> {{ boutique.telephone }}</p>
+          <p class="local"> {{ boutique.local.nom_local }} ({{ boutique.local.emplacement }})</p>
+        </div>
+      </div>
+
+      <!-- Colonne droite : horaires -->
+      <div class="horaires-col" *ngIf="boutique.horaires?.length">
+        <h2>🕒 Horaires d'ouverture</h2>
+        <ul>
+          <li *ngFor="let horaire of boutique.horaires">
+            <span class="jour">{{ horaire.jour }}</span>
+            <span class="heures" *ngIf="horaire.is_open; else ferme">
+              {{ horaire.ouverture }} – {{ horaire.fermeture }}
+            </span>
+            <ng-template #ferme><span class="ferme">Fermé</span></ng-template>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="produits-section">
+    <h2>🛍️ Nos produits</h2>
+    <div *ngIf="loadingProduits" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Chargement des produits...</p>
+    </div>
+    <div *ngIf="errorProduits" class="error-message">{{ errorProduits }}</div>
+    <div *ngIf="!loadingProduits && !errorProduits && produits.length === 0" class="empty-message">
+      Aucun produit disponible pour le moment.
+    </div>
+    <div class="produits-grid" *ngIf="!loadingProduits && !errorProduits && produits.length > 0">
+      <div *ngFor="let produit of produits" class="produit-card">
+        <div class="produit-image">
+          <img *ngIf="produit.images && produit.images.length > 0" [src]="getImageUrl(produit.images[0])" [alt]="produit.nom">
+          <div *ngIf="!produit.images || produit.images.length === 0" class="no-image">📷</div>
+        </div>
+        <div class="produit-info">
+          <h3>{{ produit.nom }}</h3>
+          <p class="description">{{ produit.description | slice:0:60 }}...</p>
+          <p class="prix">AR {{ produit.prix | number:'1.0-2' }}</p>
+          <p class="stock" [class.disponible]="produit.isDispo" [class.rupture]="!produit.isDispo">
+            {{ produit.isDispo ? '✅ En stock' : '❌ Rupture' }}
+          </p>
+          <a [routerLink]="['/home/produit', produit._id]" class="btn-ajouter">Voir plus de détails</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

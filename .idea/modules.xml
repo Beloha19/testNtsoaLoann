@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/testNtsoaLoann.iml" filepath="$PROJECT_DIR$/.idea/testNtsoaLoann.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/front-mean.iml" filepath="$PROJECT_DIR$/.idea/front-mean.iml" />
     </modules>
   </component>
 </project>

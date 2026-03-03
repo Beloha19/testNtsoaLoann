@@ -1,0 +1,319 @@
+<div class="produits-container">
+  <div class="header">
+
+  </div>
+
+  <div class="filters">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Rechercher un produit..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearchChange()"
+    />
+    <select
+      class="filter-select"
+      [(ngModel)]="selectedSousCategorie"
+      (change)="onSousCategorieChange()"
+    >
+      <option value="">Toutes les sous-catégories</option>
+      <option *ngFor="let sc of sousCategories; trackBy: trackById" [value]="sc?.id">
+        {{ sc?.nom }}
+      </option>
+    </select>
+    <button class="btn-ajouter" (click)="openAddModal()">+ Ajouter un produit</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Chargement des produits...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="!loading && !error && filteredProduits.length === 0" class="empty">
+    Aucun produit trouvé.
+  </div>
+
+  <!-- Grille des produits -->
+  <div *ngIf="!loading && !error && filteredProduits.length > 0" class="produits-grid">
+    <div *ngFor="let produit of filteredProduits" class="produit-card">
+      <div class="produit-images">
+        <img
+          *ngIf="produit.images && produit.images.length > 0"
+          [src]="getImageUrl(produit.images[0])"
+          [alt]="produit.nom"
+        />
+        <div *ngIf="!produit.images || produit.images.length === 0" class="no-image">
+          📷
+        </div>
+      </div>
+      <div class="produit-info">
+        <h3>{{ produit.nom }}</h3>
+        <p class="prix">AR {{ produit.prix | number:'1.0-2' }}</p>
+        <p class="stock" [class.disponible]="produit.isDispo" [class.rupture]="!produit.isDispo">
+          {{ produit.isDispo ? '✅ En stock' : '❌ Rupture' }}
+        </p>
+        <div class="actions">
+          <button class="btn-modifier" (click)="openEditModal(produit)">Modifier</button>
+          <button class="btn-stock" (click)="openStockModal(produit)">+ Stock</button>
+          <button class="btn-supprimer" (click)="openDeleteModal(produit)">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal d'ajout de stock -->
+  <div class="modal" *ngIf="showStockModal">
+    <div class="modal-content">
+      <span class="close" (click)="closeStockModal()">&times;</span>
+      <h2>Ajouter du stock pour {{ selectedProduit?.nom }}</h2>
+      <form [formGroup]="stockForm" (ngSubmit)="onSubmitStock()">
+        <div class="form-group">
+          <label for="taille">Taille (optionnel)</label>
+          <input type="text" id="taille" formControlName="taille" placeholder="Ex: S, M, L, 40...">
+        </div>
+        <div class="form-group">
+          <label for="quantite">Quantité *</label>
+          <input type="number" id="quantite" formControlName="quantite" min="1" step="1" />
+          <div *ngIf="stockForm.get('quantite')?.invalid && stockForm.get('quantite')?.touched" class="error-message">
+            La quantité est requise et doit être positive
+          </div>
+        </div>
+        <div *ngIf="stockError" class="error-message">{{ stockError }}</div>
+        <div *ngIf="stockSuccess" class="success-message">{{ stockSuccess }}</div>
+        <div class="form-actions">
+          <button type="button" class="btn-annuler" (click)="closeStockModal()">Annuler</button>
+          <button type="submit" class="btn-valider" [disabled]="stockForm.invalid || stockUploading">
+            {{ stockUploading ? 'Ajout...' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal d'ajout de produit -->
+  <div class="modal" *ngIf="showAddModal">
+    <div class="modal-content">
+      <span class="close" (click)="closeAddModal()">&times;</span>
+      <h2>Ajouter un produit</h2>
+      <form [formGroup]="addForm" (ngSubmit)="onSubmitAdd()">
+        <div class="form-group">
+          <label for="reference">Référence *</label>
+          <input
+            type="text"
+            id="reference"
+            formControlName="reference"
+            placeholder="Ex: PRD-001"
+          />
+          <div
+            *ngIf="addForm.get('reference')?.invalid && addForm.get('reference')?.touched"
+            class="error-message"
+          >
+            La référence est requise
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="nom">Nom *</label>
+          <input type="text" id="nom" formControlName="nom" />
+          <div
+            *ngIf="addForm.get('nom')?.invalid && addForm.get('nom')?.touched"
+            class="error-message"
+          >
+            Le nom est requis
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" formControlName="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="prix">Prix (AR) *</label>
+          <input
+            type="number"
+            id="prix"
+            formControlName="prix"
+            min="0"
+            step="0.01"
+          />
+          <div
+            *ngIf="addForm.get('prix')?.invalid && addForm.get('prix')?.touched"
+            class="error-message"
+          >
+            Prix invalide (minimum 0)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="categorieId">Catégorie *</label>
+          <select id="categorieId" formControlName="categorieId">
+            <option value="">-- Choisir --</option>
+            <option *ngFor="let cat of categories" [value]="cat._id">
+              {{ cat.nom }}
+            </option>
+          </select>
+          <div
+            *ngIf="addForm.get('categorieId')?.invalid && addForm.get('categorieId')?.touched"
+            class="error-message"
+          >
+            Catégorie requise
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="sousCategorieId">Sous-catégorie *</label>
+          <select id="sousCategorieId" formControlName="sousCategorieId">
+            <option value="">-- Choisir --</option>
+            <option *ngFor="let sc of formSousCategories; trackBy: trackById" [value]="sc?.id">
+              {{ sc?.nom }}
+            </option>
+          </select>
+          <div
+            *ngIf="addForm.get('sousCategorieId')?.invalid && addForm.get('sousCategorieId')?.touched"
+            class="error-message"
+          >
+            Sous-catégorie requise
+          </div>
+        </div>
+
+        <!-- Images -->
+        <div class="form-group">
+          <label for="images">Images (1 à 5) *</label>
+          <input
+            type="file"
+            id="images"
+            (change)="onFileSelected($event)"
+            multiple
+            accept="image/*"
+          />
+          <small>Vous pouvez sélectionner jusqu'à 5 images.</small>
+          <div *ngIf="selectedFiles.length === 0 && addForm.touched" class="error-message">
+            Au moins une image est requise
+          </div>
+        </div>
+
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+        <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-annuler"
+            (click)="closeAddModal()"
+            [disabled]="uploading"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="btn-valider"
+            [disabled]="addForm.invalid || uploading || selectedFiles.length === 0"
+          >
+            {{ uploading ? 'Ajout...' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de modification de produit -->
+  <div class="modal" *ngIf="showEditModal">
+    <div class="modal-content">
+      <span class="close" (click)="closeEditModal()">&times;</span>
+      <h2>Modifier le produit</h2>
+      <form [formGroup]="editForm" (ngSubmit)="onSubmitEdit()">
+        <div class="form-group">
+          <label for="edit-reference">Référence *</label>
+          <input type="text" id="edit-reference" formControlName="reference" />
+          <div *ngIf="editForm.get('reference')?.invalid && editForm.get('reference')?.touched" class="error-message">
+            La référence est requise
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-nom">Nom *</label>
+          <input type="text" id="edit-nom" formControlName="nom" />
+          <div *ngIf="editForm.get('nom')?.invalid && editForm.get('nom')?.touched" class="error-message">
+            Le nom est requis
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-description">Description</label>
+          <textarea id="edit-description" formControlName="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-prix">Prix (AR) *</label>
+          <input type="number" id="edit-prix" formControlName="prix" min="0" step="0.01" />
+          <div *ngIf="editForm.get('prix')?.invalid && editForm.get('prix')?.touched" class="error-message">
+            Prix invalide (minimum 0)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-categorieId">Catégorie *</label>
+          <select id="edit-categorieId" formControlName="categorieId">
+            <option value="">-- Choisir --</option>
+            <option *ngFor="let cat of categories" [value]="cat._id">{{ cat.nom }}</option>
+          </select>
+          <div *ngIf="editForm.get('categorieId')?.invalid && editForm.get('categorieId')?.touched" class="error-message">
+            Catégorie requise
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-sousCategorieId">Sous-catégorie *</label>
+          <select id="edit-sousCategorieId" formControlName="sousCategorieId">
+            <option value="">-- Choisir --</option>
+            <option *ngFor="let sc of editFormSousCategories" [value]="sc.id">{{ sc.nom }}</option>
+          </select>
+          <div *ngIf="editForm.get('sousCategorieId')?.invalid && editForm.get('sousCategorieId')?.touched" class="error-message">
+            Sous-catégorie requise
+          </div>
+        </div>
+
+        <!-- Images actuelles -->
+        <div class="form-group" *ngIf="editExistingImages.length > 0">
+          <label>Images actuelles</label>
+          <div class="images-preview">
+            <div *ngFor="let img of editExistingImages" class="image-preview">
+              <img [src]="getImageUrl(img)" alt="Image produit" />
+            </div>
+          </div>
+          <small>Les nouvelles images remplaceront les anciennes.</small>
+        </div>
+
+        <!-- Nouvelles images -->
+        <div class="form-group">
+          <label for="edit-images">Nouvelles images (max 5, optionnel)</label>
+          <input type="file" id="edit-images" (change)="onEditFileSelected($event)" multiple accept="image/*" />
+          <small>Laissez vide pour conserver les images actuelles.</small>
+        </div>
+
+        <div *ngIf="editError" class="error-message">{{ editError }}</div>
+        <div *ngIf="editSuccess" class="success-message">{{ editSuccess }}</div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-annuler" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="btn-valider" [disabled]="editForm.invalid || editUploading">
+            {{ editUploading ? 'Modification...' : 'Modifier' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de confirmation de suppression -->
+  <div class="modal" *ngIf="showDeleteModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <span class="close" (click)="closeDeleteModal()">&times;</span>
+      <h2>Confirmer la suppression</h2>
+      <p>Êtes-vous sûr de vouloir supprimer le produit <strong>{{ produitToDelete?.nom }}</strong> ?</p>
+      <div class="form-actions" style="justify-content: center;">
+        <button class="btn-annuler" (click)="closeDeleteModal()" [disabled]="deleteLoading">Annuler</button>
+        <button class="btn-supprimer" (click)="confirmDelete()" [disabled]="deleteLoading">
+          {{ deleteLoading ? 'Suppression...' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

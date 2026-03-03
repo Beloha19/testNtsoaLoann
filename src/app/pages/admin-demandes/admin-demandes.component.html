@@ -1,0 +1,423 @@
+<app-navbar-admin></app-navbar-admin>
+<!-- LOADING OVERLAY -->
+<div class="ad-overlay" [class.active]="isLoading">
+  <div class="ad-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="ad-toast" [class.show]="isToastVisible">
+  <div class="ad-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<!-- PAGE -->
+<div class="ad-page">
+
+  <!-- ── HEADER ── -->
+  <div class="ad-header">
+    <div class="ad-header-left">
+      <div class="ad-label">// Administration</div>
+      <h1 class="ad-title">Demandes de <em>location</em></h1>
+      <div class="ad-subtitle">Analysez les dossiers clients et prenez vos décisions</div>
+    </div>
+    <div class="ad-header-right">
+      <div class="ad-counter" *ngIf="demandes.length > 0">
+        <span class="ad-counter-num">{{ demandes.length }}</span>
+        <span class="ad-counter-lbl">en attente</span>
+      </div>
+      <button class="ad-refresh-btn" (click)="loadDemandes()" [disabled]="isLoading">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <div class="ad-divider"></div>
+
+  <!-- ── EMPTY STATE ── -->
+  <div class="ad-empty" *ngIf="demandes.length === 0 && !isLoading">
+    <div class="ad-empty-icon">◈</div>
+    <div class="ad-empty-title">Aucune demande en attente</div>
+    <div class="ad-empty-sub">Toutes les demandes ont été traitées</div>
+  </div>
+
+  <!-- ── LISTE ── -->
+  <div class="ad-list" *ngIf="demandes.length > 0">
+    <div class="ad-card"
+         *ngFor="let d of demandes; let i = index"
+         [style.animation-delay]="i * 0.05 + 's'"
+         (click)="ouvrirDetail(d)">
+
+      <div class="ad-card-num">#{{ (i + 1) | number:'3.0-0' }}</div>
+
+      <div class="ad-status-bar">
+        <span class="ad-status-dot"></span>
+        <span class="ad-status-text">En attente</span>
+        <span class="ad-status-hint">Cliquer pour analyser →</span>
+      </div>
+
+      <div class="ad-card-body">
+        <div class="ad-info-block">
+          <div class="ad-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Client
+          </div>
+          <div class="ad-info-val">{{ d.clientID?.email ?? '—' }}</div>
+          <div class="ad-info-sub" *ngIf="d.clientID?.telephone">{{ d.clientID?.telephone }}</div>
+        </div>
+
+        <div class="ad-info-block">
+          <div class="ad-info-label">Demandé le</div>
+          <div class="ad-info-val ad-date">{{ d.createdAt | date:'dd/MM/yyyy' }}</div>
+          <div class="ad-info-sub">{{ d.createdAt | date:'HH:mm' }}</div>
+        </div>
+
+        <div class="ad-info-block">
+          <div class="ad-info-label">Type client</div>
+          <div class="ad-info-val">{{ d.clientID?.typeClient?.typeClientex ?? '—' }}</div>
+        </div>
+      </div>
+
+      <!-- Badge dossier -->
+      <div class="ad-card-badge-zone" (click)="$event.stopPropagation()">
+        <div class="ad-dossier-badge"
+             [class.complet]="getDossierInfo(d._id)?.complet === true"
+             [class.incomplet]="getDossierInfo(d._id)?.complet === false && !getDossierInfo(d._id)?.critique"
+             [class.critique]="getDossierInfo(d._id)?.critique === true"
+             [class.chargement]="!getDossierInfo(d._id)">
+
+          <ng-container *ngIf="!getDossierInfo(d._id)">
+            <div class="ad-badge-spinner"></div>
+            <span>Vérification…</span>
+          </ng-container>
+
+          <ng-container *ngIf="getDossierInfo(d._id)?.complet === true">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>{{ getDossierInfo(d._id)?.progression }} complet</span>
+          </ng-container>
+
+          <ng-container *ngIf="getDossierInfo(d._id)?.complet === false && !getDossierInfo(d._id)?.critique">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>{{ getDossierInfo(d._id)?.progression }} incomplet</span>
+          </ng-container>
+
+          <ng-container *ngIf="getDossierInfo(d._id)?.critique === true">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span>{{ getDossierInfo(d._id)?.progression }} — docs obligatoires manquants</span>
+          </ng-container>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL DÉTAIL DEMANDE                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="ad-modal-overlay" [class.active]="isDetailOpen" (click)="fermerDetail()">
+  <div class="ad-modal" (click)="$event.stopPropagation()" *ngIf="demandeDetail">
+
+    <div class="ad-modal-header">
+      <div>
+        <div class="ad-modal-tag">// Analyse du dossier</div>
+        <div class="ad-modal-title">{{ demandeDetail.clientID?.email ?? 'Client' }}</div>
+        <div class="ad-modal-sub">
+          Demande du {{ demandeDetail.createdAt | date:'dd/MM/yyyy à HH:mm' }}
+          <span class="ad-modal-type" *ngIf="demandeDetail.clientID?.typeClient?.typeClientex">
+            · {{ demandeDetail.clientID?.typeClient?.typeClientex }}
+          </span>
+        </div>
+      </div>
+      <button class="ad-modal-close" (click)="fermerDetail()">✕</button>
+    </div>
+
+    <!-- LOADING -->
+    <div class="ad-modal-body" *ngIf="isLoadingDetail">
+      <div class="ad-loading-docs">
+        <div class="ad-spinner-sm"></div>
+        <span>Chargement des dossiers…</span>
+      </div>
+    </div>
+
+    <div class="ad-modal-body" *ngIf="!isLoadingDetail">
+
+      <!-- ── INFOS : client + local + finances ── -->
+      <div class="ad-info-grid" *ngIf="dossierDetail">
+
+        <div class="ad-info-section">
+          <div class="ad-section-title">// Client</div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Email</span>
+            <span class="ad-info-val-md">{{ dossierDetail.client?.email ?? '—' }}</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Téléphone</span>
+            <span class="ad-info-val-md">{{ dossierDetail.client?.telephone ?? '—' }}</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Type</span>
+            <span class="ad-info-val-md ad-badge-type">{{ dossierDetail.client?.typeClient ?? '—' }}</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Demandé le</span>
+            <span class="ad-info-val-md">{{ demandeDetail.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="ad-info-section" *ngIf="dossierDetail.reservation?.local">
+          <div class="ad-section-title">// Local réservé</div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Nom</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.local.nom ?? '—' }}</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Emplacement</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.local.emplacement ?? '—' }}</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Surface</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.local.surface ?? '—' }} m²</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Catégorie</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.local.categorie ?? '—' }}</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">État</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.local.etat ?? '—' }}</span>
+          </div>
+        </div>
+
+        <div class="ad-info-section" *ngIf="dossierDetail.reservation">
+          <div class="ad-section-title">// Conditions financières</div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Durée</span>
+            <span class="ad-info-val-md ad-highlight">{{ dossierDetail.reservation.infoLoc?.duree ?? '—' }} mois</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Loyer mensuel</span>
+            <span class="ad-info-val-md ad-highlight">{{ dossierDetail.reservation.infoLoc?.prixMensuel | number:'1.0-0' }} Ar</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Total contrat</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.infoLoc?.totalContrat | number:'1.0-0' }} Ar</span>
+          </div>
+          <div class="ad-info-row">
+            <span class="ad-info-key">Statut réservation</span>
+            <span class="ad-info-val-md">{{ dossierDetail.reservation.status ?? '—' }}</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Progression globale -->
+      <div class="ad-progression-bar-wrap" *ngIf="dossierDetail">
+        <div class="ad-prog-label">
+          <span>Complétude du dossier</span>
+          <span class="ad-prog-fraction">{{ dossierDetail.progression }}</span>
+        </div>
+        <div class="ad-prog-track">
+          <div class="ad-prog-fill"
+               [style.width]="getProgressionPct(dossierDetail.progression) + '%'"
+               [class.complet]="dossierDetail.dossierComplet"
+               [class.critique]="hasMissingObligatoires()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste des documents -->
+      <div class="ad-docs-section" *ngIf="dossierDetail">
+        <div class="ad-docs-title">// Documents soumis</div>
+
+        <div class="ad-doc-row" *ngFor="let doc of dossierDetail.documents">
+
+          <div class="ad-doc-status-icon"
+               [class.present]="doc.present"
+               [class.absent-obligatoire]="!doc.present && doc.obligatoire"
+               [class.absent-optionnel]="!doc.present && !doc.obligatoire">
+            <svg *ngIf="doc.present" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <svg *ngIf="!doc.present && doc.obligatoire" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <svg *ngIf="!doc.present && !doc.obligatoire" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </div>
+
+          <div class="ad-doc-info">
+            <div class="ad-doc-name">
+              {{ doc.nomDocument ?? doc.typeDocumentId }}
+              <span class="ad-doc-obligatoire" *ngIf="doc.obligatoire">*</span>
+              <span class="ad-doc-optionnel" *ngIf="!doc.obligatoire">(optionnel)</span>
+            </div>
+            <div class="ad-doc-desc-text" *ngIf="doc.description">{{ doc.description }}</div>
+            <div class="ad-doc-meta" *ngIf="doc.present">
+              Soumis le {{ doc.uploadedAt | date:'dd/MM/yyyy' }}
+              <span class="ad-doc-statut" [class.en-attente]="doc.status === 'en attente'">
+                · {{ doc.status }}
+              </span>
+            </div>
+            <div class="ad-doc-absent" *ngIf="!doc.present">
+              {{ doc.obligatoire ? 'Document obligatoire manquant' : 'Non soumis' }}
+            </div>
+          </div>
+
+          <div class="ad-doc-actions" *ngIf="doc.present && doc.cheminDossier">
+            <button class="ad-doc-btn-view"
+                    (click)="voirDocument(doc.cheminDossier)"
+                    title="Voir le document">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Voir
+            </button>
+            <button class="ad-doc-btn-dl"
+                    (click)="telechargerDocument(doc.cheminDossier)"
+                    title="Télécharger">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              DL
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Aperçu image/pdf -->
+      <div class="ad-preview-zone" *ngIf="previewUrl">
+        <div class="ad-preview-header">
+          <span class="ad-preview-title">// Aperçu du document</span>
+          <button class="ad-preview-close" (click)="fermerPreview()">✕ Fermer</button>
+        </div>
+        <img *ngIf="isImage(previewUrl)" [src]="previewUrl" class="ad-preview-img" alt="Document">
+        <iframe *ngIf="!isImage(previewUrl)" [src]="previewUrl | safe" class="ad-preview-pdf"></iframe>
+      </div>
+
+      <!-- Champ commentaire -->
+      <div class="ad-commentaire-section">
+        <div class="ad-docs-title">// Commentaire (optionnel)</div>
+        <textarea class="ad-commentaire-input"
+                  [(ngModel)]="commentaire"
+                  rows="3"
+                  placeholder="Expliquez votre décision au client…"></textarea>
+      </div>
+
+    </div>
+
+    <!-- ── FOOTER DÉCISION ── -->
+    <div class="ad-modal-footer" *ngIf="!isLoadingDetail">
+      <button class="ad-modal-btn-cancel" (click)="fermerDetail()">Fermer</button>
+
+      <!-- APERÇU CONTRAT — ouvre le HTML dans un nouvel onglet sans générer le PDF -->
+      <button class="ad-btn-apercu"
+              (click)="apercuContrat()"
+              [disabled]="isSubmitting || isLoadingApercu"
+              title="Visualiser le contrat avant de l'émettre">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span *ngIf="!isLoadingApercu">Aperçu contrat</span>
+        <span *ngIf="isLoadingApercu">
+          <span class="ad-btn-spinner"></span>
+          Chargement…
+        </span>
+      </button>
+
+      <button class="ad-btn-refuser"
+              (click)="prendreDecision('refuse')"
+              [disabled]="isSubmitting || isLoadingApercu">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        <span *ngIf="!isSubmitting">Refuser</span>
+        <span *ngIf="isSubmitting">…</span>
+      </button>
+
+      <button class="ad-btn-accepter"
+              (click)="prendreDecision('accepte')"
+              [disabled]="isSubmitting || isLoadingApercu">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span *ngIf="!isSubmitting">Accepter & Générer contrat</span>
+        <span *ngIf="isSubmitting">Génération PDF…</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL CONFIRMATION                                         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="ad-modal-overlay ad-modal-overlay-sm" [class.active]="isConfirmOpen" (click)="fermerConfirm()">
+  <div class="ad-modal ad-modal-confirm" (click)="$event.stopPropagation()">
+
+    <div class="ad-modal-header">
+      <div>
+        <div class="ad-modal-tag" [class.refus]="decisionEnCours === 'refuse'">
+          <ng-container *ngIf="decisionEnCours === 'accepte'">// Confirmer l'acceptation</ng-container>
+          <ng-container *ngIf="decisionEnCours === 'refuse'">// Confirmer le refus</ng-container>
+        </div>
+        <div class="ad-modal-title">Êtes-vous sûr ?</div>
+        <div class="ad-modal-sub">
+          <ng-container *ngIf="decisionEnCours === 'accepte'">
+            Le contrat PDF sera généré définitivement et envoyé au client.
+          </ng-container>
+          <ng-container *ngIf="decisionEnCours === 'refuse'">
+            La demande sera refusée. Cette action est irréversible.
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-modal-footer">
+      <button class="ad-modal-btn-cancel" (click)="fermerConfirm()">Annuler</button>
+
+      <button class="ad-btn-refuser"
+              *ngIf="decisionEnCours === 'refuse'"
+              (click)="confirmerDecision()"
+              [disabled]="isSubmitting">
+        <ng-container *ngIf="!isSubmitting">Confirmer le refus</ng-container>
+        <ng-container *ngIf="isSubmitting">Refus en cours...</ng-container>
+      </button>
+
+      <button class="ad-btn-accepter"
+              *ngIf="decisionEnCours === 'accepte'"
+              (click)="confirmerDecision()"
+              [disabled]="isSubmitting">
+        <ng-container *ngIf="!isSubmitting">Confirmer &amp; Générer contrat</ng-container>
+        <ng-container *ngIf="isSubmitting">Génération...</ng-container>
+      </button>
+    </div>
+
+  </div>
+</div>
+<app-footer-admin></app-footer-admin>

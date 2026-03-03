@@ -1,0 +1,126 @@
+<!-- footer-admin.component.html -->
+<footer class="ms-footer">
+
+  <!-- Glow décoratif -->
+  <div class="ms-footer__glow"></div>
+
+  <!-- ── Section principale ── -->
+  <div class="ms-footer__top">
+
+    <!-- Brand -->
+    <div class="ms-footer__brand">
+      <a routerLink="/" class="ms-footer__logo">MARKET<span>SPACE</span></a>
+      <p class="ms-footer__tagline">
+        Une sélection exclusive de locaux commerciaux dans les emplacements
+        les plus stratégiques. Chaque espace est une opportunité.
+      </p>
+      <div class="ms-footer__socials">
+        <a href="#" class="ms-footer__social-btn" title="LinkedIn">in</a>
+        <a href="#" class="ms-footer__social-btn" title="Instagram">ig</a>
+        <a href="#" class="ms-footer__social-btn" title="Facebook">fb</a>
+        <a href="#" class="ms-footer__social-btn" title="Twitter/X">𝕏</a>
+      </div>
+    </div>
+
+    <!-- Espaces -->
+    <div class="ms-footer__col">
+      <div class="ms-footer__col-title">Espaces</div>
+      <ul class="ms-footer__links">
+        <li><a routerLink="/espaces" [queryParams]="{ categorie: 'Boutique' }">Boutiques</a></li>
+        <li><a routerLink="/espaces" [queryParams]="{ categorie: 'Pop-up-store' }">Pop-up stores</a></li>
+        <li><a routerLink="/espaces" [queryParams]="{ categorie: 'Galerie' }">Galeries</a></li>
+        <li><a routerLink="/espaces" [queryParams]="{ categorie: 'Restaurant' }">Restaurants</a></li>
+        <li><a routerLink="/espaces" [queryParams]="{ categorie: 'Bureau' }">Bureaux</a></li>
+      </ul>
+    </div>
+
+    <!-- Services -->
+    <div class="ms-footer__col">
+      <div class="ms-footer__col-title">Services</div>
+      <ul class="ms-footer__links">
+        <li><a routerLink="/visites">Réserver une visite</a></li>
+        <li><a routerLink="/services">Estimation gratuite</a></li>
+        <li><a routerLink="/services">Conseil immobilier</a></li>
+        <li><a routerLink="/services">Gestion locative</a></li>
+      </ul>
+    </div>
+
+    <!-- Société -->
+    <div class="ms-footer__col">
+      <div class="ms-footer__col-title">Société</div>
+      <ul class="ms-footer__links">
+        <li><a routerLink="/about">À propos</a></li>
+        <li><a routerLink="/about">Notre équipe</a></li>
+        <li><a routerLink="/about">Actualités</a></li>
+        <li><a routerLink="/contact">Contact</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ── Newsletter ── -->
+  <div class="ms-footer__newsletter">
+    <div class="ms-footer__nl-text">
+      <div class="ms-footer__nl-label">// Newsletter</div>
+      <div class="ms-footer__nl-title">
+        Restez informé des nouvelles <em>opportunités</em>
+      </div>
+    </div>
+    <div class="ms-footer__nl-form">
+      <ng-container *ngIf="!newsletterSent; else successTpl">
+        <input
+          type="email"
+          class="ms-footer__nl-input"
+          [(ngModel)]="newsletterEmail"
+          placeholder="votre@email.com"
+          (keyup.enter)="onSubscribe()">
+        <button class="ms-footer__nl-btn" (click)="onSubscribe()">
+          S'abonner →
+        </button>
+      </ng-container>
+      <ng-template #successTpl>
+        <div class="ms-footer__nl-success">
+          <span class="ms-footer__dot"></span>
+          Inscription confirmée, merci !
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="ms-footer__stats">
+    <div class="ms-footer__stat">
+      <span class="ms-footer__stat-number">120+</span>
+      <span class="ms-footer__stat-label">Espaces disponibles</span>
+    </div>
+    <div class="ms-footer__stat">
+      <span class="ms-footer__stat-number">4</span>
+      <span class="ms-footer__stat-label">Emplacements</span>
+    </div>
+    <div class="ms-footer__stat">
+      <span class="ms-footer__stat-number">98%</span>
+      <span class="ms-footer__stat-label">Satisfaction client</span>
+    </div>
+    <div class="ms-footer__stat">
+      <span class="ms-footer__stat-number">10 ans</span>
+      <span class="ms-footer__stat-label">D'expertise</span>
+    </div>
+  </div>
+
+  <!-- ── Bottom bar ── -->
+  <div class="ms-footer__bottom">
+    <p class="ms-footer__copy">
+      © {{ currentYear }} <span>MarketSpace</span>. Tous droits réservés.
+    </p>
+    <ul class="ms-footer__legal">
+      <li><a routerLink="/legal">Mentions légales</a></li>
+      <li><a routerLink="/privacy">Confidentialité</a></li>
+      <li><a routerLink="/cgu">CGU</a></li>
+    </ul>
+    <div class="ms-footer__indicator">
+      <span class="ms-footer__dot"></span>
+      <span class="ms-footer__status">Système opérationnel</span>
+    </div>
+  </div>
+
+</footer>

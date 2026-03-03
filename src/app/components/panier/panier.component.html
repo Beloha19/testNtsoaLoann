@@ -1,0 +1,76 @@
+<div class="panier-container">
+  <h1>Mon Panier</h1>
+
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Chargement du panier...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && panier && panier.items.length === 0" class="panier-vide">
+    <p>Votre panier est vide.</p>
+    <a routerLink="/home/boutiques" class="btn-continuer">Continuer mes achats</a>
+  </div>
+
+  <div *ngIf="!loading && !error && panier && panier.items.length > 0" class="panier-contenu">
+    <div class="items">
+      <div *ngFor="let item of panier.items" class="item">
+        <!-- Cas où le produit est peuplé -->
+        <ng-container *ngIf="getProduit(item) as p">
+          <div class="item-image">
+            <img *ngIf="p.images?.length" [src]="getImageUrl(p.images[0])" [alt]="p.nom">
+            <div *ngIf="!p.images?.length" class="no-image">📷</div>
+          </div>
+          <div class="item-details">
+            <h3>{{ p.nom }}</h3>
+            <p *ngIf="item.taille">Taille : {{ item.taille }}</p>
+            <p>Prix unitaire : {{ item.prixUnitaire | number }} AR</p>
+            <div class="quantite">
+              <label>Quantité :</label>
+              <input
+                type="number"
+                [value]="item.quantite"
+                min="1"
+                (change)="modifierQuantite(item, $any($event.target).value)"
+                [disabled]="updating"
+              />
+            </div>
+            <p>Total : {{ item.prixUnitaire * item.quantite | number }} AR</p>
+          </div>
+          <button class="btn-supprimer" (click)="supprimerArticle(getProduitId(item))" [disabled]="updating">Supprimer</button>
+        </ng-container>
+
+        <!-- Fallback si produit non peuplé (ne devrait pas arriver) -->
+        <ng-container *ngIf="!getProduit(item)">
+          <div class="item-image">📷</div>
+          <div class="item-details">
+            <h3>Produit (ID: {{ item.produitId }})</h3>
+            <p *ngIf="item.taille">Taille : {{ item.taille }}</p>
+            <p>Prix unitaire : {{ item.prixUnitaire | number }} AR</p>
+            <div class="quantite">
+              <label>Quantité :</label>
+              <input
+                type="number"
+                [value]="item.quantite"
+                min="1"
+                (change)="modifierQuantite(item, $any($event.target).value)"
+                [disabled]="updating"
+              />
+            </div>
+            <p>Total : {{ item.prixUnitaire * item.quantite | number }} AR</p>
+          </div>
+          <button class="btn-supprimer" (click)="supprimerArticle(getProduitId(item))" [disabled]="updating">Supprimer</button>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="recap">
+      <h2>Récapitulatif</h2>
+      <p>Total : <strong>{{ totalFormate }} AR</strong></p>
+      <button class="btn-commander" [disabled]="updating" routerLink="/home/commander">Passer commande</button>
+      <button class="btn-vider" (click)="viderPanier()" [disabled]="updating">Vider le panier</button>
+      <a routerLink="/home/boutiques" class="btn-continuer">Continuer mes achats</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,193 @@
+.panier-container {
+  padding: 2rem;
+  background-color: white;
+  color: black;
+  min-height: 100vh;
+}
+
+h1 {
+  color: orange;
+  margin-bottom: 2rem;
+}
+
+.loading-indicator {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.spinner {
+  border: 4px solid #ddd;
+  border-top: 4px solid orange;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background-color: rgba(255,68,68,0.1);
+  border: 1px solid #ff4444;
+  color: #ff4444;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.panier-vide {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.panier-contenu {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.items {
+  flex: 2;
+  min-width: 300px;
+}
+
+.item {
+  display: flex;
+  gap: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+  align-items: center;
+}
+
+.item-image {
+  width: 80px;
+  height: 80px;
+  background-color: #eee;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.item-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  font-size: 2rem;
+  color: #999;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-details h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.quantite {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.quantite input {
+  width: 60px;
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-supprimer {
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-supprimer:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.recap {
+  flex: 1;
+  min-width: 250px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  height: fit-content;
+}
+
+.recap h2 {
+  color: orange;
+  margin-top: 0;
+  border-bottom: 1px solid orange;
+  padding-bottom: 0.5rem;
+}
+
+.recap p {
+  font-size: 1.2rem;
+  margin: 1rem 0;
+}
+
+.btn-commander, .btn-vider, .btn-continuer {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.btn-commander {
+  background-color: orange;
+  color: black;
+}
+
+.btn-commander:hover:not(:disabled) {
+  background-color: #ff8c00;
+}
+
+.btn-vider {
+  background-color: #ccc;
+  color: black;
+}
+
+.btn-vider:hover:not(:disabled) {
+  background-color: #aaa;
+}
+
+.btn-continuer {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.btn-continuer:hover {
+  background-color: #45a049;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

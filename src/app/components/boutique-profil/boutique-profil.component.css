@@ -1,0 +1,257 @@
+.profil-container {
+  background-color: white;
+  color: black;
+  padding: 2rem;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+h1, h2, h3 {
+  color: orange;
+  border-bottom: 1px solid orange;
+  padding-bottom: 0.3rem;
+}
+
+.info-section {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.info-section p {
+  margin: 0.5rem 0;
+}
+
+.edit-form {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  color: black;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: orange;
+  box-shadow: 0 0 5px orange;
+}
+
+input[readonly], input[disabled] {
+  background-color: #e9e9e9;
+  cursor: not-allowed;
+}
+
+.horaire-group {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: white;
+}
+
+.horaire-ligne {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.horaire-ligne .jour {
+  font-weight: bold;
+  min-width: 100px;
+}
+
+.horaire-ligne label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.horaire-ligne input[type="time"] {
+  width: auto;
+  flex: 1;
+  min-width: 100px;
+}
+
+button {
+  background-color: orange;
+  color: black;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #ff8c00;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.success {
+  color: #00aa00;
+  background-color: #e0ffe0;
+  border: 1px solid #00aa00;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.error {
+  color: #ff4444;
+  background-color: #ffe0e0;
+  border: 1px solid #ff4444;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Logo agrandi */
+.profile-logo {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  background-color: #f9f9f9;
+}
+
+.horaires-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.horaires-list li {
+  margin-bottom: 0.5rem;
+  color: black;
+}
+
+.horaires-list .jour {
+  font-weight: bold;
+  display: inline-block;
+  width: 100px;
+}
+
+.btn-edit {
+  background-color: orange;
+  color: black;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-edit:hover {
+  background-color: #ff8c00;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions button[type="button"] {
+  background-color: #ccc;
+  color: black;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.form-actions button[type="button"]:hover {
+  background-color: #aaa;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .profil-container {
+    padding: 1rem;
+  }
+
+  .horaire-ligne {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .horaire-ligne .jour {
+    min-width: auto;
+  }
+}
+
+/* Styles pour l'affichage côte à côte (vue lecture seule) */
+.view-mode .info-horaires-container {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.view-mode .info-section,
+.view-mode .horaires-section {
+  flex: 1;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.view-mode .horaires-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.view-mode .horaires-section li {
+  margin-bottom: 0.5rem;
+  color: black;
+}
+
+.view-mode .horaires-section .jour {
+  font-weight: bold;
+  display: inline-block;
+  width: 100px;
+}
+
+@media (max-width: 600px) {
+  .view-mode .info-horaires-container {
+    flex-direction: column;
+  }
+}

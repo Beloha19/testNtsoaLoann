@@ -1,0 +1,407 @@
+<app-navbar-admin></app-navbar-admin>
+<!-- add-local.component.html -->
+
+<!-- LOADING OVERLAY -->
+<div class="al-overlay" *ngIf="isSubmitting">
+  <div class="al-spinner"></div>
+  <p class="al-spinner-label">Enregistrement en cours…</p>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="al-success" *ngIf="submitSuccess">
+  <div class="al-success-icon">✓</div>
+  <div class="al-success-title">Local ajouté</div>
+  <p class="al-success-sub">Redirection vers les espaces…</p>
+</div>
+
+<!-- PAGE -->
+<div class="al-page" *ngIf="!submitSuccess">
+
+  <!-- ── Header ── -->
+  <div class="al-header">
+    <button class="al-back" (click)="goBack()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+      </svg>
+      Retour
+    </button>
+    <div class="al-header-center">
+      <div class="al-page-label">// Gestion des espaces</div>
+      <h1 class="al-page-title">Ajouter un <em>local</em></h1>
+    </div>
+    <div class="al-header-right"></div>
+  </div>
+
+  <!-- ── Stepper ── -->
+  <div class="al-stepper">
+    <div class="al-stepper-track">
+      <div class="al-stepper-fill" [style.width.%]="progressPct"></div>
+    </div>
+    <div class="al-steps">
+      <div class="al-step" [class.active]="currentStep === 1" [class.done]="currentStep > 1">
+        <div class="al-step-num">{{ currentStep > 1 ? '✓' : '01' }}</div>
+        <div class="al-step-label">Identité</div>
+      </div>
+      <div class="al-step" [class.active]="currentStep === 2" [class.done]="currentStep > 2">
+        <div class="al-step-num">{{ currentStep > 2 ? '✓' : '02' }}</div>
+        <div class="al-step-label">Caractéristiques</div>
+      </div>
+      <div class="al-step" [class.active]="currentStep === 3">
+        <div class="al-step-num">03</div>
+        <div class="al-step-label">Détails</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form body ── -->
+  <div class="al-body">
+
+    <!-- ══ STEP 1 : Identité ══ -->
+    <div class="al-step-panel" [class.visible]="currentStep === 1">
+      <div class="al-section-title">
+        <span class="al-section-num">01</span>
+        Identité du local
+      </div>
+
+      <div class="al-form-grid">
+
+        <!-- Nom -->
+        <div class="al-field al-field--full">
+          <label class="al-label">Nom de la boutique <span class="al-req">*</span></label>
+          <input
+            class="al-input"
+            [class.error]="hasError('nom_boutique')"
+            type="text"
+            [(ngModel)]="form.nom_boutique"
+            placeholder="ex. Galerie Lumière"
+            name="nom_boutique">
+          <span class="al-error" *ngIf="hasError('nom_boutique')">{{ getError('nom_boutique') }}</span>
+        </div>
+
+        <!-- Catégorie -->
+        <div class="al-field">
+          <label class="al-label">Catégorie <span class="al-req">*</span></label>
+          <div class="al-select-wrap">
+            <select
+              class="al-select"
+              [class.error]="hasError('categorie')"
+              [(ngModel)]="form.categorie"
+              name="categorie">
+              <option value="">Choisir…</option>
+              <option *ngFor="let c of CATEGORIES" [value]="c.value">{{ c.label }}</option>
+            </select>
+          </div>
+          <span class="al-error" *ngIf="hasError('categorie')">{{ getError('categorie') }}</span>
+        </div>
+
+        <!-- Emplacement -->
+        <div class="al-field">
+          <label class="al-label">Emplacement <span class="al-req">*</span></label>
+          <div class="al-select-wrap">
+            <select
+              class="al-select"
+              [class.error]="hasError('emplacement')"
+              [(ngModel)]="form.emplacement"
+              name="emplacement">
+              <option value="">Choisir…</option>
+              <option *ngFor="let e of EMPLACEMENTS" [value]="e.value">{{ e.label }}</option>
+            </select>
+          </div>
+          <span class="al-error" *ngIf="hasError('emplacement')">{{ getError('emplacement') }}</span>
+        </div>
+
+        <!-- État -->
+        <div class="al-field">
+          <label class="al-label">État de la boutique</label>
+          <div class="al-radio-group">
+            <label class="al-radio" *ngFor="let et of ETATS" [class.active]="form.etat_boutique === et.value">
+              <input type="radio" [(ngModel)]="form.etat_boutique" [value]="et.value" name="etat">
+              <span class="al-radio-dot" [attr.data-etat]="et.value"></span>
+              {{ et.label }}
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ STEP 2 : Caractéristiques ══ -->
+    <div class="al-step-panel" [class.visible]="currentStep === 2">
+      <div class="al-section-title">
+        <span class="al-section-num">02</span>
+        Caractéristiques
+      </div>
+
+      <div class="al-form-grid">
+
+        <!-- Surface -->
+        <div class="al-field">
+          <label class="al-label">Surface (m²) <span class="al-req">*</span></label>
+          <div class="al-input-unit-wrap">
+            <input
+              class="al-input"
+              [class.error]="hasError('surface')"
+              type="number"
+              [(ngModel)]="form.surface"
+              placeholder="0"
+              min="1"
+              name="surface">
+            <span class="al-unit">m²</span>
+          </div>
+          <span class="al-error" *ngIf="hasError('surface')">{{ getError('surface') }}</span>
+        </div>
+
+        <!-- Loyer -->
+        <div class="al-field">
+          <label class="al-label">Loyer mensuel (Ar) <span class="al-req">*</span></label>
+          <div class="al-input-unit-wrap">
+            <input
+              class="al-input"
+              [class.error]="hasError('loyer')"
+              type="number"
+              [(ngModel)]="form.loyer"
+              placeholder="0"
+              min="1"
+              name="loyer">
+            <span class="al-unit">Ar</span>
+          </div>
+          <span class="al-error" *ngIf="hasError('loyer')">{{ getError('loyer') }}</span>
+        </div>
+
+        <!-- Upload images -->
+        <div class="al-field al-field--full">
+          <label class="al-label">
+            Images du local
+            <span class="al-label-meta">{{ imagePreviews.length }}/{{ MAX_IMAGES }} — max {{ MAX_SIZE_MB }} Mo chacune</span>
+          </label>
+
+          <!-- Drop zone -->
+          <div class="al-dropzone"
+               [class.drag-over]="isDragOver"
+               [class.has-files]="imagePreviews.length > 0"
+               (dragover)="onDragOver($event)"
+               (dragleave)="onDragLeave($event)"
+               (drop)="onDrop($event)"
+               *ngIf="canAddMore">
+            <div class="al-dropzone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="3" y="3" width="18" height="18" rx="1"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <div class="al-dropzone-text">
+              Glissez vos images ici
+              <span>ou</span>
+            </div>
+            <label class="al-dropzone-btn">
+              Parcourir
+              <input type="file" accept="image/*" multiple (change)="onFileInputChange($event)" hidden>
+            </label>
+            <div class="al-dropzone-hint">JPG, PNG, WEBP · max {{ MAX_SIZE_MB }} Mo · {{ MAX_IMAGES }} fichiers</div>
+          </div>
+
+          <!-- Erreur image -->
+          <div class="al-img-error" *ngIf="imageError">⚠ {{ imageError }}</div>
+
+          <!-- Grille aperçu -->
+          <div class="al-img-grid" *ngIf="imagePreviews.length > 0">
+            <div class="al-img-thumb"
+                 *ngFor="let img of imagePreviews; let i = index"
+                 [class.is-main]="i === 0"
+                 (mouseenter)="activePreview = i"
+                 (mouseleave)="activePreview = null">
+              <img [src]="img.url" [alt]="img.name">
+
+              <!-- Badge principale -->
+              <div class="al-img-badge" *ngIf="i === 0">Principale</div>
+
+              <!-- Actions au survol -->
+              <div class="al-img-actions" [class.visible]="activePreview === i">
+                <button type="button" class="al-img-action main-btn"
+                        *ngIf="i !== 0" (click)="setMain(i)" title="Définir comme principale">
+                  ★
+                </button>
+                <button type="button" class="al-img-action left-btn"
+                        *ngIf="i > 0" (click)="moveImage(i, i-1)" title="Déplacer à gauche">
+                  ‹
+                </button>
+                <button type="button" class="al-img-action right-btn"
+                        *ngIf="i < imagePreviews.length - 1" (click)="moveImage(i, i+1)" title="Déplacer à droite">
+                  ›
+                </button>
+                <button type="button" class="al-img-action del-btn"
+                        (click)="removeImage(i)" title="Supprimer">
+                  ×
+                </button>
+              </div>
+
+              <!-- Nom + taille -->
+              <div class="al-img-meta">
+                <span class="al-img-name">{{ img.name }}</span>
+                <span class="al-img-size">{{ img.size }}</span>
+              </div>
+            </div>
+
+            <!-- Bouton ajouter encore -->
+            <label class="al-img-add-more" *ngIf="canAddMore">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span>Ajouter</span>
+              <input type="file" accept="image/*" multiple (change)="onFileInputChange($event)" hidden>
+            </label>
+          </div>
+        </div>
+
+        <!-- Preview card -->
+        <div class="al-field al-field--full" *ngIf="form.surface || form.loyer">
+          <div class="al-preview-card">
+            <div class="al-preview-label">// Aperçu</div>
+            <div class="al-preview-specs">
+              <div class="al-preview-spec" *ngIf="form.surface">
+                <span class="al-preview-val">{{ form.surface }}</span>
+                <span class="al-preview-unit">m²</span>
+              </div>
+              <div class="al-preview-spec" *ngIf="form.loyer">
+                <span class="al-preview-val">{{ formatPrice(form.loyer) }}</span>
+                <span class="al-preview-unit">/ mois</span>
+              </div>
+              <div class="al-preview-spec">
+                <span class="al-preview-val" style="color:var(--accent)">●</span>
+                <span class="al-preview-unit">{{ form.etat_boutique || 'disponible' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ STEP 3 : Détails ══ -->
+    <div class="al-step-panel" [class.visible]="currentStep === 3">
+      <div class="al-section-title">
+        <span class="al-section-num">03</span>
+        Détails &amp; avantages
+      </div>
+
+      <div class="al-form-grid">
+
+        <!-- Description -->
+        <div class="al-field al-field--full">
+          <label class="al-label">Description</label>
+          <textarea
+            class="al-textarea"
+            [(ngModel)]="form.description"
+            placeholder="Décrivez l'espace, son ambiance, ses atouts…"
+            rows="4"
+            name="description"></textarea>
+          <span class="al-char-count">{{ form.description.length }} caractères</span>
+        </div>
+
+        <!-- Avantages -->
+        <div class="al-field al-field--full">
+          <label class="al-label">Avantages</label>
+
+          <!-- Suggestions rapides -->
+          <div class="al-suggestions">
+            <button
+              type="button"
+              class="al-suggestion"
+              *ngFor="let s of AVANTAGES_SUGGESTIONS"
+              [class.active]="isAvantageSelected(s)"
+              (click)="toggleSuggestion(s)">
+              {{ s }}
+              <span *ngIf="isAvantageSelected(s)"> ✓</span>
+            </button>
+          </div>
+
+          <!-- Input personnalisé -->
+          <div class="al-avantage-input-row">
+            <input
+              class="al-input"
+              type="text"
+              [(ngModel)]="newAvantage"
+              placeholder="Ajouter un avantage personnalisé…"
+              name="newAvantage"
+              (keydown)="onAvantageKeydown($event)">
+            <button type="button" class="al-add-btn" (click)="addAvantage()">+ Ajouter</button>
+          </div>
+
+          <!-- Tags sélectionnés -->
+          <div class="al-tags" *ngIf="form.avantage.length > 0">
+            <span class="al-tag" *ngFor="let av of form.avantage">
+              {{ av }}
+              <button type="button" class="al-tag-remove" (click)="removeAvantage(av)">×</button>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Récap final -->
+      <div class="al-recap" *ngIf="form.nom_boutique">
+        <div class="al-recap-title">// Récapitulatif</div>
+        <div class="al-recap-grid">
+          <div class="al-recap-row">
+            <span class="al-recap-key">Nom</span>
+            <span class="al-recap-val">{{ form.nom_boutique }}</span>
+          </div>
+          <div class="al-recap-row">
+            <span class="al-recap-key">Catégorie</span>
+            <span class="al-recap-val">{{ form.categorie || '—' }}</span>
+          </div>
+          <div class="al-recap-row">
+            <span class="al-recap-key">Emplacement</span>
+            <span class="al-recap-val">{{ form.emplacement || '—' }}</span>
+          </div>
+          <div class="al-recap-row">
+            <span class="al-recap-key">Surface</span>
+            <span class="al-recap-val">{{ form.surface ? form.surface + ' m²' : '—' }}</span>
+          </div>
+          <div class="al-recap-row">
+            <span class="al-recap-key">Loyer</span>
+            <span class="al-recap-val" style="color:var(--or)">{{ formatPrice(form.loyer) }}</span>
+          </div>
+          <div class="al-recap-row">
+            <span class="al-recap-key">État</span>
+            <span class="al-recap-val">{{ form.etat_boutique }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Erreur globale -->
+      <div class="al-submit-error" *ngIf="submitError">
+        <span>⚠</span> {{ submitError }}
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ── Navigation bas ── -->
+  <div class="al-nav">
+    <button class="al-btn-secondary" (click)="prevStep()" *ngIf="currentStep > 1">
+      ← Précédent
+    </button>
+    <div *ngIf="currentStep === 1" class="al-nav-spacer"></div>
+
+    <div class="al-step-indicator">
+      <span *ngFor="let s of [1,2,3]"
+            class="al-dot"
+            [class.active]="currentStep === s"
+            [class.done]="currentStep > s">
+      </span>
+    </div>
+
+    <button class="al-btn-primary" (click)="nextStep()" *ngIf="currentStep < TOTAL_STEPS">
+      Suivant →
+    </button>
+    <button class="al-btn-submit" (click)="onSubmit()" *ngIf="currentStep === TOTAL_STEPS" [disabled]="isSubmitting">
+      <span *ngIf="!isSubmitting">Enregistrer le local →</span>
+      <span *ngIf="isSubmitting">Envoi…</span>
+    </button>
+  </div>
+
+</div>
+<app-footer-admin></app-footer-admin>

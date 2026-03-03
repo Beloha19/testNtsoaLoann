@@ -1,0 +1,304 @@
+.boutiques-container {
+  background-color: white;
+  min-height: 100vh;
+  color: black;
+  padding: 2rem;
+  position: relative;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  color: orange;
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.subtitle {
+  color: #333;
+  font-size: 1.1rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.filters-bar {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.filters-dropdown {
+  position: relative;
+}
+
+.filters-btn {
+  background: none;
+  border: none;
+  color: black;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.filters-btn:hover {
+  background-color: orange;
+  color: black;
+}
+
+.filters-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 1rem;
+  min-width: 250px;
+  z-index: 1000;
+  margin-top: 0.5rem;
+}
+
+.filter-loading,
+.filter-error {
+  padding: 0.5rem;
+  text-align: center;
+  color: #666;
+}
+
+.filter-error {
+  color: #ff4444;
+}
+
+.filter-options {
+  max-height: 450px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.filter-option {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: black;
+  cursor: pointer;
+}
+
+.filter-option input {
+  margin-right: 0.5rem;
+}
+
+.filter-actions {
+  text-align: right;
+}
+
+.apply-btn {
+  background-color: orange;
+  color: black;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.apply-btn:hover {
+  background-color: #ff8c00;
+}
+
+.count {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Grille des boutiques : 4 colonnes */
+.boutiques-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(180px, 1fr)) !important;
+  gap: 2rem !important;
+}
+
+.boutique-card-link {
+  padding: 1.2rem;
+}
+
+/* Carte boutique */
+.boutique-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.boutique-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-color: orange;
+}
+
+.boutique-card-link {
+  text-decoration: none;
+  color: black;
+  display: block;
+  padding: 1rem;
+}
+
+.boutique-logo {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.boutique-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.no-logo {
+  background-color: #eee;
+  color: #999;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.boutique-name {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* Index alphabétique (optionnel, si utilisé) */
+.alphabet-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.letter-link {
+  display: inline-block;
+  padding: 0.5rem 0.8rem;
+  background-color: #f0f0f0;
+  color: black;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.letter-link:hover {
+  background-color: orange;
+  color: black;
+}
+
+.letter-section {
+  margin-bottom: 2rem;
+}
+
+.letter-title {
+  color: orange;
+  font-size: 1.8rem;
+  border-bottom: 2px solid orange;
+  padding-bottom: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+/* Back link */
+.back-link {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: orange;
+  color: black;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.back-link:hover {
+  background-color: #ff8c00;
+}
+
+/* Loading indicator */
+.loading-indicator {
+  text-align: center;
+  margin-top: 3rem;
+  color: black;
+}
+
+.spinner {
+  border: 4px solid #ddd;
+  border-top: 4px solid orange;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background-color: rgba(255, 68, 68, 0.1);
+  border: 1px solid #ff4444;
+  color: #ff4444;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.empty-message {
+  text-align: center;
+  color: #666;
+  margin-top: 3rem;
+  font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .boutiques-container {
+    padding: 1rem;
+  }
+
+  .boutiques-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .alphabet-index {
+    gap: 0.3rem;
+  }
+
+  .letter-link {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .back-link {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+  }
+}

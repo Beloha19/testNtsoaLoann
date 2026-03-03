@@ -1,0 +1,161 @@
+.ventes-container {
+  padding: 2rem;
+  background-color: white;
+  color: black;
+  min-height: 100vh;
+}
+
+h1 {
+  color: orange;
+  margin-bottom: 2rem;
+}
+
+.loading-indicator {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.spinner {
+  border: 4px solid #ddd;
+  border-top: 4px solid orange;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message, .empty-message {
+  text-align: center;
+  color: #666;
+  margin-top: 2rem;
+}
+
+.vente-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.vente-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  font-weight: 500;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vente-client {
+  padding: 0.5rem 1rem;
+  background-color: #e8f0fe;
+  border-bottom: 1px solid #ddd;
+  font-style: italic;
+}
+
+.vente-items {
+  padding: 1rem;
+}
+
+.item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item-image {
+  width: 50px;
+  height: 50px;
+  background-color: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.item-details {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nom {
+  font-weight: bold;
+  min-width: 150px;
+}
+
+.taille {
+  color: orange;
+  font-size: 0.9rem;
+}
+
+.quantite {
+  background-color: #eee;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.prix {
+  font-weight: bold;
+  margin-left: auto;
+}
+
+.vente-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.btn-confirmer, .btn-annuler, .btn-ticket {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.btn-confirmer {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-annuler {
+  background-color: #ff4444;
+  color: white;
+}
+
+.btn-ticket {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-confirmer:hover, .btn-annuler:hover, .btn-ticket:hover {
+  opacity: 0.8;
+}

@@ -1,0 +1,326 @@
+
+<div class="cr-overlay" [class.active]="isLoading">
+  <div class="cr-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="cr-toast" [class.show]="isToastVisible">
+  <div class="cr-toast-dot"></div>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<!-- PAGE -->
+<div class="cr-page">
+
+  <!-- ── HEADER ── -->
+  <div class="cr-header">
+    <div class="cr-header-left">
+      <div class="cr-label">// Mon espace</div>
+      <h1 class="cr-title">Mes <em>réservations</em></h1>
+      <div class="cr-subtitle">Gérez vos locaux réservés et soumettez vos dossiers de location</div>
+    </div>
+    <div class="cr-header-right">
+      <div class="cr-counter" *ngIf="reservations.length > 0">
+        <span class="cr-counter-num">{{ reservations.length }}</span>
+        <span class="cr-counter-lbl">local{{ reservations.length > 1 ? 'aux' : '' }}</span>
+      </div>
+      <button class="cr-refresh-btn" (click)="loadReservations()" [disabled]="isLoading">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <div class="cr-divider"></div>
+
+  <!-- ── EMPTY STATE ── -->
+  <div class="cr-empty" *ngIf="reservations.length === 0 && !isLoading">
+    <div class="cr-empty-icon">◈</div>
+    <div class="cr-empty-title">Aucune réservation</div>
+    <div class="cr-empty-sub">Vous n'avez pas encore de local réservé</div>
+  </div>
+
+  <!-- ── LISTE DES RÉSERVATIONS ── -->
+  <div class="cr-list" *ngIf="reservations.length > 0">
+
+    <div class="cr-card"
+         *ngFor="let r of reservations; let i = index"
+         [style.animation-delay]="i * 0.06 + 's'">
+
+      <div class="cr-card-num">#{{ (i + 1) | number:'3.0-0' }}</div>
+
+      <!-- Bande statut -->
+      <div class="cr-status-bar"
+           [style.--s-color]="getStatusConfig(r?.status).color"
+           [style.--s-bg]="getStatusConfig(r?.status).bg">
+        <span class="cr-status-dot"></span>
+        <span class="cr-status-text">{{ getStatusConfig(r?.status).label }}</span>
+      </div>
+
+      <!-- Infos principales -->
+      <div class="cr-card-body">
+
+        <div class="cr-info-block">
+          <div class="cr-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Local
+          </div>
+          <div class="cr-info-val">{{ getLocalNom(r) }}</div>
+        </div>
+
+        <div class="cr-info-block">
+          <div class="cr-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Durée
+          </div>
+          <div class="cr-info-val cr-duree">{{ r.infoLoc.dure }} mois</div>
+        </div>
+
+        <div class="cr-info-block">
+          <div class="cr-info-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Prix mensuel
+          </div>
+          <div class="cr-info-val cr-prix">{{ formatPrix(r.infoLoc.prix) }} Ar</div>
+        </div>
+
+        <div class="cr-info-block">
+          <div class="cr-info-label">Réservé le</div>
+          <div class="cr-info-val cr-date">{{ r.createdAt | date:'dd/MM/yyyy' }}</div>
+        </div>
+
+        <div class="cr-info-block">
+          <div class="cr-info-label">Statut</div>
+          <div class="cr-statut-pill"
+               [style.color]="getStatusConfig(r?.status).color"
+               [style.background]="getStatusConfig(r?.status).bg"
+               [style.border-color]="getStatusConfig(r?.status).border">
+            {{ getStatusConfig(r?.status).icon }} {{ getStatusConfig(r?.status).label }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ACTION : bouton Soumettre dossier -->
+      <div class="cr-card-action" (click)="$event.stopPropagation()">
+
+        <!-- Dossier pas encore soumis -->
+        <button class="cr-btn-soumettre"
+                *ngIf="!getDossierStatus(r._id)"
+                (click)="ouvrirChoixTypeClient(r)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          Soumettre le dossier
+        </button>
+
+        <!-- Dossier complet : message rassurant -->
+        <div class="cr-dossier-complet" *ngIf="getDossierStatus(r._id) === 'soumis'">
+          <div class="cr-dossier-complet-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="cr-dossier-complet-text">
+            <span class="cr-dossier-complet-title">Dossier complet</span>
+            <span class="cr-dossier-complet-sub">L'admin analysera votre demande. Vous aurez une réponse dans les plus brefs délais.</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 1 — CHOIX TYPE CLIENT                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="cr-modal-overlay" [class.active]="isChoixTypeModalOpen" (click)="closeChoixTypeModal()">
+  <div class="cr-modal" (click)="$event.stopPropagation()">
+
+    <div class="cr-modal-header">
+      <div>
+        <div class="cr-modal-tag">// Étape 1 sur 2</div>
+        <div class="cr-modal-title">Votre profil</div>
+        <div class="cr-modal-sub">Sélectionnez votre type de demandeur pour afficher les documents requis</div>
+      </div>
+      <button class="cr-modal-close" (click)="closeChoixTypeModal()">✕</button>
+    </div>
+
+    <div class="cr-modal-body">
+      <div class="cr-type-grid">
+
+        <!-- Entreprise -->
+        <button class="cr-type-card"
+                [class.selected]="selectedTypeClient === 'SOCIETE'"
+                (click)="selectTypeClient('SOCIETE')">
+          <div class="cr-type-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          <div class="cr-type-name">SOCIETE</div>
+          <div class="cr-type-desc">Société, SARL, SA, association…</div>
+          <div class="cr-type-check" *ngIf="selectedTypeClient === 'SOCIETE'">✓</div>
+        </button>
+
+        <!-- Individuel -->
+        <button class="cr-type-card"
+                [class.selected]="selectedTypeClient === 'INDIVIDU'"
+                (click)="selectTypeClient('INDIVIDU')">
+          <div class="cr-type-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="cr-type-name">INDIVIDU</div>
+          <div class="cr-type-desc">Personne physique, auto-entrepreneur…</div>
+          <div class="cr-type-check" *ngIf="selectedTypeClient === 'INDIVIDU'">✓</div>
+        </button>
+
+      </div>
+    </div>
+
+    <div class="cr-modal-footer">
+      <button class="cr-modal-btn-cancel" (click)="closeChoixTypeModal()">Annuler</button>
+      <button class="cr-modal-btn-next"
+              [disabled]="!selectedTypeClient"
+              (click)="passerAuDossier()">
+        Continuer →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 2 — UPLOAD DES DOSSIERS                             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="cr-modal-overlay" [class.active]="isDossierModalOpen" (click)="closeDossierModal()">
+  <div class="cr-modal cr-modal-lg" (click)="$event.stopPropagation()">
+
+    <div class="cr-modal-header">
+      <div>
+        <div class="cr-modal-tag">// Étape 2 sur 2 · {{ typeClientLabel || selectedTypeClient }}</div>
+        <div class="cr-modal-title">Dossier de location</div>
+        <div class="cr-modal-sub" *ngIf="reservationEnCours">
+          Local : <strong>{{ getLocalNom(reservationEnCours) }}</strong>
+        </div>
+      </div>
+      <button class="cr-modal-close" (click)="closeDossierModal()">✕</button>
+    </div>
+
+    <!-- Chargement des docs requis -->
+    <div class="cr-modal-body" *ngIf="isLoadingDocs">
+      <div class="cr-loading-docs">
+        <div class="cr-spinner-sm"></div>
+        <span>Chargement des documents requis…</span>
+      </div>
+    </div>
+
+    <div class="cr-modal-body" *ngIf="!isLoadingDocs">
+
+      <!-- Info type client -->
+      <div class="cr-type-badge">
+        <span class="cr-type-badge-icon">{{ selectedTypeClient === 'SOCIETE' ? '🏢' : '👤' }}</span>
+        <span>Documents requis pour un profil <strong>{{ typeClientLabel || selectedTypeClient }}</strong></span>
+        <span class="cr-docs-count">{{ documentsRequis.length }} document{{ documentsRequis.length > 1 ? 's' : '' }}</span>
+      </div>
+
+      <!-- Liste des documents à uploader -->
+      <div class="cr-docs-list">
+        <div class="cr-doc-item" *ngFor="let doc of documentsRequis">
+
+          <div class="cr-doc-header">
+            <div class="cr-doc-name">
+              <span class="cr-doc-bullet">◈</span>
+              {{ doc.nom }}
+              <span class="cr-doc-required" *ngIf="obligatoire">*</span>
+            </div>
+            <div class="cr-doc-desc" *ngIf="doc.description">{{ doc.description }}</div>
+          </div>
+
+          <!-- Zone drop / upload -->
+          <div class="cr-upload-zone"
+               [class.has-file]="uploadedFiles[doc.id]"
+               [class.drag-over]="dragOverId === doc.id"
+               (dragover)="onDragOver($event, doc.id)"
+               (dragleave)="onDragLeave()"
+               (drop)="onDrop($event, doc.id)"
+               (click)="triggerFileInput(doc.id)">
+
+            <input type="file"
+                   [id]="'file-' + doc.id"
+                   accept=".pdf,.jpg,.jpeg,.png"
+                   style="display:none"
+                   (change)="onFileSelected($event, doc.id)">
+
+            <!-- Pas de fichier -->
+            <ng-container *ngIf="!uploadedFiles[doc.id]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="cr-upload-icon">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="cr-upload-text">Glisser-déposer ou <span class="cr-upload-link">parcourir</span></div>
+              <div class="cr-upload-hint">PDF, JPG, PNG — 10 Mo max</div>
+            </ng-container>
+
+            <!-- Fichier sélectionné -->
+            <ng-container *ngIf="uploadedFiles[doc.id]">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cr-file-ok-icon">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <div class="cr-file-name">{{ uploadedFiles[doc.id].name }}</div>
+              <div class="cr-file-size">{{ formatSize(uploadedFiles[doc.id].size) }}</div>
+              <button class="cr-file-remove" (click)="removeFile($event, doc.id)">✕ Retirer</button>
+            </ng-container>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Message si aucun doc configuré -->
+      <div class="cr-no-docs" *ngIf="documentsRequis.length === 0 && !isLoadingDocs">
+        <div>Aucun document configuré pour ce type de client.</div>
+      </div>
+
+    </div>
+
+    <div class="cr-modal-footer">
+      <button class="cr-modal-btn-cancel" (click)="closeDossierModal()">← Retour</button>
+      <button class="cr-modal-btn-submit"
+              (click)="soumettreLesDossiers()"
+              [disabled]="isSubmitting || !tousLesFichiersPresents()">
+        <span *ngIf="!isSubmitting">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Soumettre le dossier
+        </span>
+        <span *ngIf="isSubmitting">Envoi en cours…</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
